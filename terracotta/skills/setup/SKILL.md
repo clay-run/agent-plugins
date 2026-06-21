@@ -39,7 +39,7 @@ and checksum-verifies the real binary on first use. You read this `SKILL.md` fro
 ```bash
 # Replace <THIS_SKILL_DIR> with the directory you read this SKILL.md from:
 shim="$(cd "<THIS_SKILL_DIR>/../.." 2>/dev/null && pwd)/bin/clay"
-[ -x "$shim" ] || shim="$(find "$HOME/.codex" "$HOME/.cursor" "$HOME/.claude" "$HOME/.config" -type f -path '*/terracotta/bin/clay' 2>/dev/null | sort | tail -n1)"
+[ -x "$shim" ] || shim="$(find "$HOME/.codex" "$HOME/.cursor" "$HOME/.claude" "$HOME/.config" -type f -path '*/bin/clay' 2>/dev/null | sort | tail -n1)"
 [ -x "$shim" ] || { echo "could not locate the bundled clay launcher; reinstall the plugin"; exit 1; }
 ```
 

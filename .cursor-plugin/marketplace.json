@@ -1,5 +1,11 @@
 {
-  "version": "1.0.0",
+  "name": "clay-plugins",
+  "owner": {
+    "name": "Clay"
+  },
+  "metadata": {
+    "description": "Official Clay plugins for Cursor"
+  },
   "plugins": [
     {
       "name": "clay",

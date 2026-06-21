@@ -10,7 +10,9 @@ REPO="clay-run/agent-plugins"
 # a JSON error envelope on stderr and a categorical exit code, so an agent that
 # branches on the first `clay` invocation sees the same shape the binary emits.
 die() {
-  printf '{"error":{"code":"%s","message":"%s"}}\n' "$1" "$2" >&2
+  # $2 may carry interpolated paths; escape \ and " so the envelope stays valid JSON.
+  msg=$(printf '%s' "$2" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  printf '{"error":{"code":"%s","message":"%s"}}\n' "$1" "$msg" >&2
   exit "$3"
 }
 
@@ -94,7 +96,8 @@ if [ ! -x "$cached" ] || [ ! -s "$cached" ]; then
   tmp="$cache_dir/.dl-$$"
   trap 'rm -f "$tmp"' EXIT INT TERM
   if command -v curl > /dev/null 2>&1; then
-    curl -fsSL "$url" -o "$tmp" || die "network_error" "clay: failed to download the CLI from $url" 5
+    # No -S: it prints a non-JSON error line to stderr even under -s, polluting the contract.
+    curl -fsL "$url" -o "$tmp" || die "network_error" "clay: failed to download the CLI from $url" 5
   elif command -v wget > /dev/null 2>&1; then
     wget -qO "$tmp" "$url" || die "network_error" "clay: failed to download the CLI from $url" 5
   else
