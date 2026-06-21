@@ -1,0 +1,20 @@
+README.md
+  s_a467bc0df463b2::t_9029a1898fb906 52-53
+  s_a467bc0df463b2::t_00307d2f296e88 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "323daec6af531c9be7a9c260d845e58e11eb9098",
+  "prompts": {},
+  "sessions": {
+    "s_a467bc0df463b2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9aa6ffcd-1526-4c71-8e69-e46da875ed2c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Dane Williams <dane.williams@clay.com>"
+    }
+  }
+}
