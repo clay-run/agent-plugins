@@ -1,14 +1,22 @@
 ---
 name: setup
-description: Make the Clay CLI usable and authenticated. Use when `clay` is not found on PATH, `clay whoami` fails, CLAY_API_KEY is missing, or the user wants to configure Clay. Works in Claude Code, Codex, and Cursor.
+description: Clay setup — authenticate both the `clay` CLI and the Clay MCP server (both are required to use the plugin). Use when `clay` is not found on PATH, `clay whoami` fails, the MCP tools (`read`, `edit_node`) error on auth, CLAY_API_KEY is missing, or the user wants to configure Clay.
 allowed-tools: Bash, Read, Edit, Write
 ---
 
 # Clay setup
 
-This skill makes the `clay` CLI available on your PATH and authenticated. The CLI
-and the Clay MCP server both read the same `CLAY_API_KEY` (the workspace is
-resolved from the key — there is no workspace id to set).
+**Two things must be authenticated to use this plugin:**
+
+1. **The `clay` CLI** — runs tests, searches actions, manages runs.
+2. **The Clay MCP server** — provides the in-editor tools (`read`, `edit_node`, `validate_workflow`, `execute_clay_action`).
+
+Both authenticate with the **same `CLAY_API_KEY`** (the workspace is resolved from the
+key — there is no workspace id to set), but they read it at different times: the CLI
+reads it per command, while the MCP server reads it **once, when the harness launches
+it**. So setting the key is not enough for the MCP — the agent (Claude Code / Codex /
+Cursor) must be **restarted** for the MCP server to pick up a newly-set key, and
+`clay whoami` succeeding does **not** by itself prove the MCP is authenticated.
 
 ## 1. Check current state
 
@@ -91,10 +99,18 @@ Create a key in Clay under **Settings → Account**, then make it available as
   export CLAY_API_KEY="<the key>"
   ```
 
-## 4. Verify
+## 4. Verify both surfaces
+
+**CLI:**
 
 ```bash
 clay whoami; echo "exit_code=$?"
 ```
 
-`exit_code=0` with a `user`/`workspace` object means setup is complete.
+`exit_code=0` with a `user`/`workspace` object means the CLI is authenticated.
+
+**MCP server:** after restarting the agent, confirm the `clay` MCP server is connected
+and its tools respond — e.g. call `read` on a workflow. If the MCP tools return an auth
+error while `clay whoami` succeeds, the key was set but the agent wasn't restarted (or
+the key isn't visible where the harness launches the MCP server) — set it as in step 3
+and restart again. Setup is complete only when **both** the CLI and the MCP tools work.

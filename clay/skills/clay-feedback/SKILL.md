@@ -1,6 +1,6 @@
 ---
 name: clay-feedback
-description: Send feedback or a bug report to the Clay team via the `clay feedback` CLI command, optionally including this session's transcript, plus environment info. Use when the user asks to report a bug, send product feedback, or share what went wrong with Clay support.
+description: Clay feedback — send a bug report or product feedback to the Clay team via the `clay feedback` CLI, optionally including this session's transcript.
 allowed-tools: Bash(clay *), Bash(ls *), Bash(pwd), Bash(sed *), Bash(head *), Bash(rm *), Write, AskUserQuestion
 ---
 

@@ -1,9 +1,10 @@
 ---
-name: simplify
-description: Analyze a Clay workflow and suggest simplifications. Reduces unnecessary complexity, merges redundant nodes, and replaces LLM nodes with deterministic alternatives where possible.
+name: workflow-simplify
+description: Clay workflows — simplify a workflow: merge redundant nodes, cut unnecessary complexity, and replace LLM nodes with deterministic alternatives where possible.
 ---
 
-# Simplify Workflow
+# Simplifying a workflow
+
 
 Analyze the current workflow and suggest concrete simplifications to reduce complexity, improve reliability, and lower costs.
 
@@ -38,10 +39,10 @@ Two adjacent nodes can often be combined into one if:
 - Nodes that just pass data through without transformation
 - Conditional nodes with only one possible outcome
 
-### Use inputRefs instead of LLM variable filling
+### Pin inputs instead of LLM variable filling
 When a downstream node needs specific typed data from an upstream node:
 - Add `outputSchema` to the upstream node
-- Add `inputSchema` + `inputRefs` to the downstream node
+- On the downstream agent node, pin each input via `sourceNodeId`/`sourcePath` inline on the `inputSchema` property and set `automapInputs: false` (see `workflows/data-passing.md`)
 - This is more reliable than relying on the LLM to fill `{{variables}}`
 
 ### Simplify tool usage

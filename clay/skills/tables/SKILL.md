@@ -1,6 +1,6 @@
 ---
-name: clay-tables
-description: Use this skill when users mention Clay tables, want to query table data, import table data, reference a table, or ask about table structure. Provides context about how Clay tables work and how to use the 'table' tools.
+name: tables
+description: Clay tables — query, inspect, and export data from an existing table (the `table` MCP tool: schema + natural-language query, CSV export). For automating a data pipeline, see the workflows skill instead.
 ---
 
 ## About Clay Tables

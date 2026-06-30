@@ -1,9 +1,10 @@
 ---
-name: optimize-credits
-description: Analyze a Clay workflow to reduce credit and LLM costs. Identifies expensive patterns and suggests cheaper alternatives.
+name: workflow-optimize-credits
+description: Clay workflows — reduce a workflow's credit and LLM cost. Identifies expensive patterns and suggests cheaper alternatives.
 ---
 
-# Optimize Credits
+# Reducing workflow credit & LLM cost
+
 
 Analyze the current workflow and suggest changes to reduce credit consumption and LLM costs without sacrificing quality.
 
@@ -29,7 +30,7 @@ Every regular (LLM) node makes at least one LLM call per execution. More capable
 Each Clay action execution consumes credits based on the action's pricing tier.
 
 **Optimizations:**
-- **Avoid redundant enrichments:** If the same data was already fetched in an earlier node, reference it via inputRefs instead of calling the action again
+- **Avoid redundant enrichments:** If the same data was already fetched in an earlier node, reference it via a pinned input (`sourceNodeId`/`sourcePath`) instead of calling the action again
 - **Use conditional routing:** Skip expensive enrichments for items that don't need them (e.g., skip company research for companies you already have data on)
 - **Choose cheaper alternatives:** Some actions have cheaper equivalents. See the `execute_clay_action` MCP tool description for the discovery surface to compare options
 - **Fail fast in map nodes:** Use `failureMode: "fail_fast"` in collect nodes if one failure means the whole batch is invalid — avoids processing remaining items

@@ -1,10 +1,11 @@
 ---
-name: discover-clay-actions
-description: Fetches the live action catalog for this workspace. Search and discover available Clay actions for Clay workflows — email lookup, company enrichment, phone finders, etc. Includes commands for getting action input schemas.
+name: workflow-discover-actions
+description: Clay workflows — discover available actions for workflow nodes (email lookup, company enrichment, phone finders, etc.) and inspect their input schemas. Use while building a workflow.
 allowed-tools: Bash(clay *), Bash(grep *), Bash(cat *), Bash(wc *), Bash(jq *), Read, Grep
 ---
 
-# Discover Clay Actions
+# Discovering Clay actions
+
 
 This skill helps you find available Clay actions for use in Clay workflow nodes,
 via the `clay` CLI. (In Codex/Cursor, run the `setup` skill once if `clay` is not
@@ -90,3 +91,21 @@ clay workflows actions schema 56058efe-4757-4fe7-a44b-39c2d730c47a find-email-fr
 This returns the action's `packageId`, `actionKey`, `displayName`, and
 `inputParameters` (the input parameter schema). Pipe to `jq '.inputParameters'`
 to see just the parameters.
+
+## Dynamic (input-dependent) fields
+
+Some actions expose extra parameters only after an earlier input is chosen — e.g.
+a CRM "create object" reveals a different field set per object type, and dependent
+dropdowns whose options depend on a parent value. These are **not** in
+`schema`'s `inputParameters`; resolve them with:
+
+```bash
+clay workflows actions dynamic-fields <packageId> <actionKey> <parameterPath> \
+  --type select|input --account <appAccountId> --inputs '{"<driver>":"<value>"}'
+```
+
+`--type select` resolves a dependent dropdown's values; `--type input` resolves a
+revealed field set (names come back pipe-namespaced, e.g. `fields|name`). It's
+iterative — fill one input, re-run with it in `--inputs` for the next. See the
+workflows skill's `data-passing.md` ("Discovering an action's dynamic fields")
+for the full flow and how the results map into `inputMappingConfig`.

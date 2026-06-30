@@ -1,10 +1,11 @@
 ---
-name: snapshots
-description: View workflow version history and restore to a previous state. Use when the user mentions snapshots, version history, or wants to see what changed. Also use when you need to undo an edit or the user wants you to undo one.
+name: workflow-snapshots
+description: Clay workflows — version history: view snapshots, see what changed, and restore or undo a previous state. Use when the user mentions snapshots or asks to undo an edit.
 allowed-tools: Bash(clay *), Bash(jq *)
 ---
 
-# Workflow Snapshots
+# Workflow snapshots & version history
+
 
 Snapshots are immutable, point-in-time captures of the entire workflow graph — nodes, edges, prompts, scripts, tools, and positions.
 
