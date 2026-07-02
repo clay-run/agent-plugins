@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "./hooks/approve-clay.sh cursor",
+        "matcher": "clay"
+      }
+    ]
+  }
+}

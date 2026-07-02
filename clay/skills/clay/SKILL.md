@@ -27,9 +27,11 @@ a new multi-step automation.
 | Skill | Use it for |
 | --- | --- |
 | `cli` | Ephemeral, programmatic access to Clay capabilities from a shell — run a routine, query a table, search, etc. |
+| `routines` | Running a saved Clay function or workflow (a "routine") and fetching its results. |
 | `public-api` | Building services and applications on top of Clay over HTTP. |
 | `workflows` | Building and editing net-new Clay workflows (multi-step automations). |
 | `tables` | Reading, querying, and exporting data from an existing Clay table. |
+| `search` | Finding people, companies, or job postings in Clay's GTM database from a natural language query. |
 | `clay-feedback` | Sending a bug report or product feedback to the Clay team. |
 
 ## First-time setup

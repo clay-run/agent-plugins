@@ -1,6 +1,19 @@
 {
   "name": "clay",
   "description": "Build with Clay in Claude Code",
-  "version": "2.1.5",
-  "author": { "name": "Clay" }
+  "version": "2.1.6",
+  "author": { "name": "Clay" },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/approve-clay.sh claude"
+          }
+        ]
+      }
+    ]
+  }
 }

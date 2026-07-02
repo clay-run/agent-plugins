@@ -169,6 +169,27 @@ is preserved as long as `inputMappingConfig` references it — so the `{{owner_n
 reference resolves. `read` the node back and confirm both the input ref and the
 mapping persisted.
 
+### Output structure of enrich (tool) nodes
+
+Enrich (tool) nodes wrap their action result in a `toolResult` envelope at runtime. The raw action
+outputs are nested under `toolResult.result`, not at the top level. When writing `inputRefs`
+or `sourcePath` expressions that point at an enrich (tool) node, you must account for this envelope:
+
+```json
+{ "sourceNodeId": "wfn_enrich_company", "sourcePath": "$.toolResult.result.name" }
+```
+
+The actual top-level keys of an enrich (tool) node's outputs are always `toolResult` (and `usage`).
+Everything the Clay action returned is inside `toolResult.result.*`.
+
+To discover the exact field names, either:
+1. Check the `recentOutputPaths` field on the node (populated from the most recent run), or
+2. Run the action once with `execute_clay_action` and look at the returned fields — those keys
+   will be available as `$.toolResult.result.<field>`.
+
+**Example:** if `execute_clay_action` returns `{ "name": "Acme", "domain": "acme.com" }`, the
+correct paths are `$.toolResult.result.name` and `$.toolResult.result.domain`.
+
 ## Discovering an action's dynamic fields
 
 Some actions only reveal their real parameters once an earlier input is chosen —

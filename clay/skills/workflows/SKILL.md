@@ -164,6 +164,12 @@ The reference is `sourceNodeId` + `sourcePath` inline on the property. Use `sour
 
 **Tool nodes are different** — their action parameters are wired in `tools[].inputMappingConfig` (`static` / `reference`), not in `inputSchema`. Do not add intermediate variables to a tool node's `inputSchema`; non-action-parameter properties are dropped on save. See `data-passing.md` for the full reference.
 
+**Important — enrich (tool) node output paths:** Enrich (tool) nodes wrap their Clay action result in a
+`toolResult` envelope. The action's fields are at `$.toolResult.result.<field>`, never at `$.<field>`
+directly. Always check the node's `recentOutputPaths` field (visible via `read`) or run
+`execute_clay_action` first to see which fields the action returns — then prefix them with
+`$.toolResult.result.`. For example: `$.toolResult.result.name`, `$.toolResult.result.domain`.
+
 ## Recommended workflow for building
 
 1. Ask the user what trigger they'll use (or recommend one) so you understand the initial node's inputs

@@ -17,8 +17,8 @@ stderr on failure, with categorical exit codes (0 ok, 2 validation, 3 auth,
 
 ```bash
 # Start a test run (input JSON on stdin via --input -; defaults to {})
-echo '{"key":"value"}' | clay workflows runs start <workflowId> --input -
-clay workflows runs start <workflowId>                 # no inputs
+echo '{"key":"value"}' | clay workflows runs test <workflowId> --input -
+clay workflows runs test <workflowId>                  # no inputs
 
 # Status / progress for a run
 clay workflows runs get <workflowId> <runId>           # header + progress + map/reduce nodes
@@ -85,7 +85,7 @@ clay workflows runs get <workflowId> <runId> --node-id <nodeId> | jq '.nodes[0]'
 
 ## Example workflow
 
-1. Start a test: `echo '{}' | clay workflows runs start wf_abc --input -`
+1. Start a test: `echo '{}' | clay workflows runs test wf_abc --input -`
 2. Watch progress with the poll loop above until `status` is `completed`/`failed`.
 3. Inspect failures: `clay workflows runs steps wf_abc wfr_xyz --status failed | jq '.data[].errors'`
 
