@@ -117,14 +117,17 @@ step 1.
 
 Run `clay login`. It opens a browser, the user signs in and picks a workspace, and
 the CLI stores the session locally on disk — used by both the CLI and by `clay mcp`,
-so there's nothing separate to configure for the MCP server. This is safe to run
-directly from an agent's shell tool: the flow waits up to 5 minutes for the browser
-round-trip, so background it if your tool enforces a shorter timeout, and poll
-`clay whoami` until it succeeds:
+so there's nothing separate to configure for the MCP server. The flow waits up to 5
+minutes for the browser round-trip. If your shell tool lets you set a per-command
+timeout, request at least 5 minutes and just run it directly and block on it:
 
 ```bash
-clay login &
+clay login   # request a timeout of at least 5 minutes if your tool supports one
 ```
+
+If your tool's timeout can't be raised past 5 minutes, don't background the
+process — ask the user to run `clay login` in their own terminal instead, then
+poll:
 
 ```bash
 clay whoami; echo "exit_code=$?"   # poll this until exit_code=0
