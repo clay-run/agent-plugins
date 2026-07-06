@@ -1,0 +1,30 @@
+clay/skills/setup/SKILL.md
+  s_23d1991ce6a0af::t_34fe9865761a97 120
+  s_70834d451d6a9c::t_7a31cdaaeb1dde 132
+  s_23d1991ce6a0af::t_5c9ed352d56b07 121-122,125
+  s_23d1991ce6a0af::t_673b36bbc1f338 128-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "589d6acf1f93c79d2a8aad5a9c7c97a8bf7ba9de",
+  "prompts": {},
+  "sessions": {
+    "s_23d1991ce6a0af": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "073175c7-9152-449b-be8f-d81028f5e67d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": null
+    },
+    "s_70834d451d6a9c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "012715e8-6a79-4ac1-846d-21f376d2bb8a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Derek Ni <derek.ni@clay.com>"
+    }
+  }
+}
