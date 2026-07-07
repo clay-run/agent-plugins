@@ -31,6 +31,12 @@ clay routines get <id>        # full config, integrations, and input schema
 `clay routines get <id>` is important before running: it shows the routine's **input
 schema** so you know exactly which fields each item needs.
 
+For **function** routines, both `list` and `get` return a `source` (`managed` for a
+Clay-managed default function, `custom` for one built in this workspace) and, for custom
+functions, a `createdBy` (`{ id, name, email }`; `null` for managed ones). Use these to tell
+the user which functions are Clay-managed vs. their team's own, and who authored a custom
+one — e.g. group them by `source`, or note the author when disambiguating similar functions.
+
 ### Create a routine from an existing function or workflow
 
 If no routine exists yet for a function (a table) or a workflow, expose it as a runnable

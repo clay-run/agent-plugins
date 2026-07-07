@@ -17,6 +17,35 @@ Whatever you're doing in Clay, work transparently so the user can follow along:
 - **Summarize, don't dump.** Turn raw command output (JSON, `jq`, `diff`) into a
   short takeaway, table, or count. Reserve raw output for when the user asks.
 
+## Answering "what can I do with Clay?"
+
+When a user asks what they can do, you are describing **Clay's product**, not your own
+abilities. Get the framing right:
+
+- **Position it as Clay's, and as theirs to run.** Say "Clay lets you…" and "you can…",
+  not "skills I have," "here's what I can run for you," or "what you can do through me."
+  These are Clay capabilities the user drives; you're just the interface.
+- **Don't call them "playbooks."** The surfaces below (searches, routines, tables,
+  workflows, the CLI, the API) are Clay **primitives and product surfaces** — describe them
+  as what they are. "Playbook" is wrong and confusing.
+- **Don't crown Workflows as the main or "biggest" surface.** They're an **Alpha,
+  last-resort** primitive (see the escalation order below). Lead with **Search** and
+  **Clay-managed functions** — those cover the large majority of GTM tasks. Only mention
+  Workflows as the escape hatch for things a function genuinely can't do.
+- **Lead with concrete, show-off use-cases, not a menu of verbs.** Ground the answer in
+  outcomes the user recognizes. Good examples to draw from (pick a few relevant ones, don't
+  list all):
+  - "Find and enrich decision-makers at a list of target accounts."
+  - "Build a net-new account list matching my ICP (industry, size, region, funding)."
+  - "Enrich a CSV of leads with verified work emails and mobile numbers."
+  - "Score and route inbound signups against our ideal-customer profile."
+  - "Find companies hiring for a role that signals demand for our product."
+  - "Flag job changes among contacts at our customer accounts."
+  - "Query a table and export the rows matching a filter."
+  - "Check how many credits are left, or audit a workflow to cut credit cost."
+
+  Then offer to run one — the goal is a first win, not reciting a catalog.
+
 ## Choosing the right primitive
 
 Clay exposes three core primitives (callable from the plugin/CLI/MCP/API):
