@@ -53,6 +53,8 @@ same caveat, different word.)
 - Outgrowing a table (hitting the row limit, needing branching logic, needing it to run
   unattended) → rebuild the *logic* as a **Workflow** (see "Rebuilding a Table as a Workflow" in
   the `tables` skill)
+- Wants to build the whole thing via CLI/agent, not the Clay app UI → **Workflows** — tables
+  aren't supported as a build target at all here, only as something to read from (see below)
 
 This is a different question from "which primitive should *the agent* use to execute a task
 right now" — that decision (search → managed function → custom function → workflow → table) is
