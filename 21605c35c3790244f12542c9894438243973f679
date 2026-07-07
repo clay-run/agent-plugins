@@ -1,0 +1,21 @@
+clay/skills/clay/SKILL.md
+  s_10aaaebd3b5042::t_f0a0a155f79f15 64
+clay/skills/workflows-vs-tables/SKILL.md
+  s_10aaaebd3b5042::t_868c234d2160a9 1-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "21605c35c3790244f12542c9894438243973f679",
+  "prompts": {},
+  "sessions": {
+    "s_10aaaebd3b5042": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "885cd4a8-828b-4e5a-ae9b-727fb270ac58",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Kausar Mukadam <kausarmukadam@kausarmukadam.local>"
+    }
+  }
+}
