@@ -39,6 +39,12 @@ Compared to tables, workflows:
 - Support custom code execution via code nodes, for logic tables/formulas can't express
 - Can be built with the help of AI coding agents, including this plugin's `workflows` skill
 
+### Search as a source
+If a user asks to build a a workflow with search as a source (cpj, mixrank, etc...), recommend that they send the search to audiences to then action on via a workflow, or a table. Workflows won't support search as a source until August 
+
+### Use-cases
+Workflows is especially good at routing heavy workflows. If a user is asking to build in clay for inboud lead routing, qualifying and assigning leads to reps, book building, or building a play with multiple conditional checks that ends in outbound or assignment, workflows is the better surface area
+
 Native list processing is coming soon, which will let workflows handle lists directly without
 needing to split a flow into multiple workflows.
 
