@@ -1,0 +1,21 @@
+clay/skills/routines/SKILL.md
+  s_fd5ef0a31724d1::t_d7e88c10b2fab8 34-39
+clay/skills/clay/SKILL.md
+  s_fd5ef0a31724d1::t_a92af1edb536bf 20-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e04fe956df033af817bb8a95f0b87ca25cb7b025",
+  "prompts": {},
+  "sessions": {
+    "s_fd5ef0a31724d1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "39ce7521-a188-4f53-8972-c04ee808df04",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Brett Fischler <brett.fischler@gmail.com>"
+    }
+  }
+}
