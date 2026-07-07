@@ -97,9 +97,17 @@ if [ ! -x "$cached" ] || [ ! -s "$cached" ]; then
   trap 'rm -f "$tmp"' EXIT INT TERM
   if command -v curl > /dev/null 2>&1; then
     # No -S: it prints a non-JSON error line to stderr even under -s, polluting the contract.
-    curl -fsL "$url" -o "$tmp" || die "network_error" "clay: failed to download the CLI from $url" 5
+    # Timeouts + retries so a bad/stalled network fails cleanly instead of hanging forever:
+    # cap the connect, and abort only if the transfer stalls below ~1KB/s for 30s (not a flat
+    # --max-time, which would wrongly kill a legitimately slow-but-progressing large download).
+    # Flags kept compatible with older curl (avoid --retry-all-errors, added in 7.71)
+    # so a host with an old curl still downloads instead of erroring on an unknown option.
+    curl -fsL --connect-timeout 10 --speed-limit 1024 --speed-time 30 \
+      --retry 3 --retry-delay 2 \
+      "$url" -o "$tmp" || die "network_error" "clay: failed to download the CLI from $url" 5
   elif command -v wget > /dev/null 2>&1; then
-    wget -qO "$tmp" "$url" || die "network_error" "clay: failed to download the CLI from $url" 5
+    # --timeout is per-stall (read/connect), so a slow-but-progressing transfer survives.
+    wget -qO "$tmp" --timeout=30 --tries=3 --waitretry=2 "$url" || die "network_error" "clay: failed to download the CLI from $url" 5
   else
     die "internal_error" "clay: need curl or wget to download the CLI" 1
   fi

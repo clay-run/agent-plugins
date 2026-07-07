@@ -1,7 +1,7 @@
 {
   "name": "clay",
   "description": "Build with Clay in Claude Code",
-  "version": "2.1.9",
+  "version": "2.1.10",
   "author": { "name": "Clay" },
   "hooks": {
     "PreToolUse": [

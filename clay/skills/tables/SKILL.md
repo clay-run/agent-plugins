@@ -1,6 +1,6 @@
 ---
 name: tables
-description: Clay tables — inspect, query, and export data from an existing table, via either the `table` MCP tool (schema + natural-language query, CSV export) or the `clay tables` CLI (list tables, run structured JSON queries with pagination, toggle API query sync)
+description: Clay tables — inspect, query, and export data from an existing table, via either the `table` MCP tool (schema + natural-language query, CSV export) or the `clay tables` CLI (list tables, run structured JSON queries with pagination, toggle API query sync). To investigate a table or record, use the focused `/table-*` skills (analyze, trace, error-sweep, value-trace, capacity).
 ---
 
 ## About Clay Tables
@@ -84,26 +84,38 @@ The `clay` CLI is Clay's programmatic surface: JSON to stdout, typed errors, and
 
 `clay tables --help` (and `clay tables <cmd> --help`) is the authoritative spec — read it for exact flags, JSON shapes, and error codes.
 
+### Reading rows vs. querying
+
+The CLI reads a table two ways; pick by how much querying power you need:
+
+- **Read rows directly** — `clay tables get`, `columns`, `rows list/get`. Works on any table with no setup. Filtering is exact-match only (`rows list --filter col=value`, ANDed together). Best for quick lookups and pulling cell values as-is.
+- **Query** — `clay tables query`. Richer: range / contains / OR filters, **joins across tables**, sorting, grouping, and paging past 100 rows. The table must first be **enabled for querying** (below).
+
+Reach for `query` the moment a plain `rows list --filter` can't express what you need — a range or text match, an OR, a join, sorting, grouping, or a large ordered pull. Otherwise a direct `rows list` is faster and needs no setup.
+
 ### List tables
 
-Discover tables and their ids. Each row carries an `apiEnabled` flag for whether the table is enabled for public-API / CLI query sync.
+Discover tables and their ids. Each row carries a `queryEnabled` flag for whether the table is enabled for querying.
 
 ```bash
-clay tables list                       # { data: [{ id, name, description, workbook, apiEnabled }], cursor? }
-clay tables list --api-enabled         # only tables enabled for querying
+clay tables list                       # { data: [{ id, name, description, workbook, queryEnabled }], cursor? }
+clay tables list --query-enabled       # only tables enabled for querying
 clay tables list --limit 50 --cursor "$CURSOR"
 ```
 
-### Enable query sync
+### Enable a table for querying
 
-A table must have **API query sync enabled** before `clay tables query` can read it. Toggle it with `update`:
+`clay tables query` can only read a table that's been **enabled for querying**. Toggle it with `update`:
 
 ```bash
-clay tables update tbl_abc123 --query-sync true    # { id, querySyncEnabled: true }
-clay tables update tbl_abc123 --query-sync false
+clay tables update tbl_abc123 --query-enabled true    # { id, queryEnabled: true }
+clay tables update tbl_abc123 --query-enabled false
 ```
 
-Enabling sync on a table that wasn't synced kicks off an initial sync, so the table is **not queryable the instant `update` returns** — there's a delay while its rows sync (longer for larger tables). A `query` run too soon may return no/partial rows; retry after a short wait.
+Two things to know:
+
+- **Not instant.** Enabling prepares the table for querying in the background, so it isn't queryable the moment `update` returns — larger tables take longer. A `query` run too soon may return no/partial rows; retry after a short wait.
+- **Limited per workspace.** A workspace can only have so many tables enabled at once, and the cap depends on your plan. Check where you stand with `clay tables query-usage` (returns `{ used, limit }`); at the cap, disable a table before enabling another.
 
 ### Run a structured query
 
@@ -119,7 +131,7 @@ clay tables query --query ./query.json --limit 100 --cursor "$CURSOR"
 - Pagination is via flags: `--limit <n>` (1–100, default 50) and `--cursor <token>`. When more rows remain, the response includes a top-level `cursor` — pass it back via `--cursor` to fetch the next page.
 - Output is `{ data: [ { "<fieldId>": <cell> } ], cursor?, fields? }`, where each `<cell>` carries a `status` (`success` / `error` / `running` / `queued` / `retry` / `rate_limited` / `awaiting_callback` / `empty`) plus its value.
 
-Typical flow: `clay tables list --api-enabled` to find the id → (if needed) `clay tables update <id> --query-sync true` → `clay tables query`. To export, redirect or convert the JSON `data` array to CSV with the Write tool as above.
+Typical flow: `clay tables list --query-enabled` to find the id → (if needed) `clay tables update <id> --query-enabled true` → `clay tables query`. To export, redirect or convert the JSON `data` array to CSV with the Write tool as above.
 
 ## Example: combine both surfaces to query across tables
 
@@ -128,7 +140,7 @@ A common pattern uses **both** surfaces together: the CLI to discover tables and
 **1. List tables via CLI to get their ids.**
 
 ```bash
-clay tables list --api-enabled | jq -r '.data[] | "\(.id)\t\(.name)"'
+clay tables list --query-enabled | jq -r '.data[] | "\(.id)\t\(.name)"'
 # tbl_accounts123   Accounts
 # tbl_contacts456   Contacts
 ```
@@ -140,19 +152,19 @@ table(tableId: "tbl_accounts123", mode: "schema")
 table(tableId: "tbl_contacts456", mode: "schema")
 ```
 
-Say the schemas show `Accounts` has `fld_employees` (number) and `fld_account_id`, and `Contacts` has `fld_company` that references the account.
+Say the schemas show `Accounts` has `f_employees` (number) and `f_account_id`, and `Contacts` has `f_company` that references the account.
 
-**3. Build a structured query from those field ids and run it via CLI.** The join and >100-row read are why this goes through the CLI rather than the MCP tool. Enable query sync first if `apiEnabled` was `false` for either table — and note that a freshly enabled table takes some time to sync before it's queryable, so give it a moment (or retry) before the `query` returns full results.
+**3. Build a structured query from those field ids and run it via CLI.** The join and >100-row read are why this goes through the CLI rather than the MCP tool. Enable querying first if `queryEnabled` was `false` for either table — and note that a freshly enabled table isn't queryable instantly, so give it a moment (or retry) before the `query` returns full results.
 
 ```bash
-clay tables update tbl_accounts123 --query-sync true
-clay tables update tbl_contacts456 --query-sync true
+clay tables update tbl_accounts123 --query-enabled true
+clay tables update tbl_contacts456 --query-enabled true
 
-# A freshly enabled table takes a moment to sync — give it time (or retry) before the query returns full results.
+# A freshly enabled table isn't queryable instantly — give it time (or retry) before the query returns full results.
 query='{
   "tables": [{ "id": "tbl_contacts456" }, { "id": "tbl_accounts123" }],
-  "join": [{ "table": "tbl_accounts123", "on": { "left": "fld_company", "right": "fld_account_id" } }],
-  "filter": { "field": "fld_employees", "op": ">", "value": 100 }
+  "join": [{ "table": "tbl_accounts123", "on": { "left": "f_company", "right": "f_account_id" } }],
+  "filter": { "field": "f_employees", "op": ">", "value": 100 }
 }'
 
 echo "$query" | clay tables query --query - --limit 100 | jq '.data | length'
@@ -174,6 +186,20 @@ done
 
 Full developer documentation (CLI reference, Public API reference, concepts) lives at:
 https://claydevelopers.mintlify.app/llms.txt
+
+## Investigating tables
+
+Beyond querying data, the CLI's read commands (`clay tables get`, `columns list|get`, `rows list|get`) support diagnostic work: what a table's workflow does, what happened to a record, and why. These need no query sync — they read the table directly. Each investigation is a focused skill; match the question and use that skill:
+
+| The user wants… | Skill |
+|-----------------|-------|
+| "what does this table do?" / "explain the {table} workflow" | `/table-analyze` |
+| "trace {id}" / "where is {id} and what state is it in?" | `/table-trace` |
+| "what's erroring in {table}?" / "show failed rows" (no identifier) | `/table-error-sweep` |
+| "why is {id} stuck/failing?" / "where did {value} come from?" | `/table-value-trace` |
+| "why aren't new rows being added / why is the import stuck?" | `/table-capacity` |
+
+Each `/table-*` skill is self-contained. `/table-analyze` and `/table-value-trace` share one helper — the column-DAG extraction recipe in `tables/dependency-catalog.md`.
 
 ## Field Types in tables
 
