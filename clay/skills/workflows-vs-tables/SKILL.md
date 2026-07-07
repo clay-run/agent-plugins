@@ -28,7 +28,7 @@ archives rows as part of expanding past the cap.
 
 ## Clay Workflows
 
-Workflows is Clay's orchestration platform, built for repeatable, production-ready automation —
+Workflows is Clay's new orchestration platform, built for repeatable, production-ready automation —
 processes that run on triggers or schedules rather than being run by hand. Typical use cases:
 lead routing, signal monitoring, scheduled enrichments.
 
