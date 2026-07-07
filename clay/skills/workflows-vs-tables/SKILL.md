@@ -23,7 +23,8 @@ Reach for a table when:
 
 Most users start with Tables — it's the more intuitive, spreadsheet-based way to learn Clay.
 
-Known limits: tables cap out around 50k rows and require managing archived rows as they grow.
+Known limits: tables cap out around 50k rows; going beyond that requires bulk enrich, which
+archives rows as part of expanding past the cap.
 
 ## Clay Workflows
 
