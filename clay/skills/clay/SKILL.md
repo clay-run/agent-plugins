@@ -88,15 +88,16 @@ Before running a credit-consuming routine, check its per-item `estimatedCreditCo
 
 ## Skills
 
-| Skill           | Use it for                                                                                                                        |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `search`        | Finding people or companies in Clay's GTM database from structured filters.                                                       |
-| `routines`      | Creating a routine from an existing function/workflow, running a saved routine, and fetching its results.                         |
-| `tables`        | Reading, querying, and exporting data from an existing Clay table (creating tables and pushing data to tables are not supported). |
-| `cli`           | Ephemeral, programmatic access to Clay capabilities from a shell — run a routine, query a table, search, etc.                     |
-| `public-api`    | Building services and applications on top of Clay over HTTP.                                                                      |
-| `workflows`     | Building and editing net-new Clay workflows (multi-step automations, Alpha).                                                      |
-| `clay-feedback` | Sending a bug report or product feedback to the Clay team.                                                                        |
+| Skill                 | Use it for                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `search`              | Finding people or companies in Clay's GTM database from structured filters.                                   |
+| `routines`            | Creating a routine from an existing function/workflow, running a saved routine, and fetching its results.     |
+| `tables`              | Reading, querying, and exporting data from an existing Clay table (creating tables is not supported).         |
+| `cli`                 | Ephemeral, programmatic access to Clay capabilities from a shell — run a routine, query a table, search, etc. |
+| `public-api`          | Building services and applications on top of Clay over HTTP.                                                  |
+| `workflows`           | Building and editing net-new Clay workflows (multi-step automations, Alpha).                                  |
+| `workflows-vs-tables` | Explaining the difference between Workflows and Tables, or recommending which to use.                         |
+| `clay-feedback`       | Sending a bug report or product feedback to the Clay team.                                                    |
 
 ## If another Clay MCP is connected
 

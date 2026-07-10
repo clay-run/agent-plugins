@@ -1,0 +1,91 @@
+---
+name: workflows-vs-tables
+description: Clay Workflows vs Tables — conceptual explainer for a customer asking what the difference is or which one to use. Read this when explaining the two products or recommending one for a use case. Users cannot build tables via the CLI/MCP/API; if a task needs a new table, surface that to the user & explain workflows are the only way to build in via CLI/MCP/API today.
+---
+
+# Clay Workflows vs. Clay Tables
+
+Customers sometimes ask what the difference is between Clay Tables and Clay Workflows, or which
+one fits their use case. Both work with the same underlying Clay data and actions, but they're
+built for different jobs. Answer in plain language — don't just paste this file at the customer.
+
+## Clay Tables
+
+Tables are spreadsheet-like environments (similar to Excel or Google Sheets) designed for
+hands-on data work. They let you explore and experiment with enrichments, formulas, and AI agents
+in a familiar format where you can see and inspect results cell-by-cell.
+
+Reach for a table when:
+
+- Doing a one-time analysis
+- Prototyping an enrichment strategy before committing to it
+- You want manual control and visibility into every step, row by row
+
+Most users start with Tables — it's the more intuitive, spreadsheet-based way to learn Clay.
+
+Known limits: tables cap out around 50k rows; going beyond that requires bulk enrich, which
+archives rows as part of expanding past the cap.
+
+## Clay Workflows
+
+Workflows is Clay's new orchestration platform for automation. Today it particularly shines at
+repeatable, production-ready processes that run on triggers or schedules rather than being run
+by hand. Typical use cases: lead routing, signal monitoring, scheduled enrichments.
+
+Compared to tables, workflows:
+
+- Have no 50k-row limit and no archived rows to manage
+- Come with purpose-built observability for tracking runs and debugging failures
+- Support custom code execution via code nodes, for logic tables/formulas can't express
+- Can be built with the help of AI coding agents, including this plugin's `workflows` skill
+
+### Search as a source
+
+If a user asks to build a workflow with search as a source (CPJ, etc.), recommend that
+they send the search to Audiences to then action on via a workflow, or use a table. Workflows
+doesn't support search as a source yet.
+
+### Use-cases
+
+Workflows is especially good at routing heavy workflows. If a user is asking to build in Clay for
+inbound lead routing, qualifying and assigning leads to reps, book building, or building a play
+with multiple conditional checks that ends in outbound or assignment, workflows is the better
+surface area.
+
+Native list processing is coming soon, which will let workflows handle lists directly without
+needing to split a flow into multiple workflows.
+
+Workflows is an alpha-stage product — say so when it comes up, so customers can calibrate
+expectations for rough edges.
+
+## Which one should a customer use?
+
+- Starting out, exploring, or doing a one-off pull → **Tables**
+- Needs to run on a schedule/trigger, repeatedly, without someone babysitting it → **Workflows**
+- Outgrowing a table (hitting the row limit, needing branching logic, needing it to run
+  unattended) → rebuild the _logic_ as a **Workflow** (see "Rebuilding a Table as a Workflow" in
+  the `tables` skill)
+- Wants to build the whole thing via CLI/agent, not the Clay app UI → **Workflows** — tables
+  aren't supported as a build target at all here, only as something to read from (see below)
+
+This is a different question from "which primitive should _the agent_ use to execute a task
+right now" — that decision (search → managed function → custom function → workflow → table) is
+covered by the escalation order in `clay/SKILL.md`, not here.
+
+## What this plugin can and can't do across the two
+
+- This plugin's CLI/MCP can **build and edit Workflows** (see the `workflows` skill) but
+  **cannot build or edit Tables** — table creation only happens in the Clay app (see the `tables`
+  skill).
+- This plugin **can read** from existing tables (schema + query) to use as input or reference
+  while building a workflow.
+- There's no automatic migration path from a table to a workflow. If a customer wants their table
+  logic rebuilt as a workflow, that's a rebuild of the logic, not a data migration — their
+  existing table data stays where it is, and a workflow can read from it as-is.
+
+## Related skills
+
+- `tables` — querying/reading data from an existing table
+- `workflows` — building and editing workflows via this plugin
+- `clay` — the primitive-selection guide for what the agent itself should build with when
+  automating a task

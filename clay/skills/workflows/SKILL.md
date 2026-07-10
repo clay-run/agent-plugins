@@ -59,6 +59,40 @@ A tool node executes a single Clay action directly — no LLM reasoning. Configu
 
 Ask the user which Clay action they want to use. To learn an action's exact input/output shape, run it once with `execute_clay_action` before wiring it into the node — that confirms both that the workspace has the action available and what fields it expects.
 
+### Conditional nodes (`nodeType: "conditional"`)
+
+A conditional node selects exactly **one** outgoing edge and follows it.
+
+**When to use which mode:**
+
+| Situation | Use |
+|-----------|-----|
+| Branch on string/number/boolean field values — equality, comparison, contains, starts/ends with, empty/not-empty | `rules` mode |
+| Multiple conditions combined with AND/OR | `rules` mode |
+| Branching decision requires open-ended reasoning (e.g. "classify this support ticket as billing, technical, or general", "does this email sound interested or not?") | `agentic` mode |
+| You need to compute or transform a value to decide the route, and that transformation can't be expressed as a field comparison (e.g. parse a JSON blob and branch on a nested value, compute a score from multiple fields) | `code` mode |
+
+**`rules` mode** — supported operators:
+- **String**: `Equal`, `NotEqual`, `Contain`, `NotContain`, `ContainAny` (value is an array), `StartsWith`, `NotStartsWith`, `EndsWith`, `NotEndsWith`, `Empty`, `NotEmpty`
+- **Number**: `Equal`, `NotEqual`, `GreaterThan`, `GreaterThanOrEqual`, `LessThan`, `LessThanOrEqual`, `Empty`, `NotEmpty`
+- **Boolean**: `True`, `False`, `Empty`, `NotEmpty`
+
+Each rule is a `ConditionalExpressionGroup` — a tree of `BinOp` leaf nodes (a single field comparison) and `GroupOp` nodes (AND/OR of children). Rules are evaluated top-to-bottom; first match wins. Set `defaultTargetNodeId` for a fallback when no rule matches.
+
+Example condition (headcount ≤ 50 AND title contains "CTO"):
+```json
+{
+  "type": "GroupOp",
+  "combinationMode": "And",
+  "items": [
+    { "type": "BinOp", "dataPath": ["headcount"], "operator": "LessThanOrEqual", "value": 50 },
+    { "type": "BinOp", "dataPath": ["title"], "operator": "Contain", "value": "CTO" }
+  ]
+}
+```
+
+**`code` mode** — the Python handler can both compute values and route. Use when the routing decision requires transformation that rules can't express (e.g. parsing a nested structure, calling a helper, computing a derived value). The handler calls `context.transition_to('Node Name', 'label')` to pick a branch.
+
 ### Trigger nodes and leaf nodes
 
 - Every workflow has a **trigger node** as its first node — this defines how the workflow gets launched (audience segment, webhook, Clay table, or manual). The trigger node's outputs become the inputs for the nodes it connects to.

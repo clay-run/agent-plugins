@@ -27,6 +27,8 @@ There are two surfaces for reading table data. Pick based on how you're working:
 
 Both read the same tables. The MCP tool turns natural language into a ClayQL query for you but is capped at a single table and 100 rows; the CLI takes a structured JSON query that supports **joins across multiple tables** and cursor pagination, so it's the right tool for complex queries or pulling large result sets. When in doubt for a quick single-table look, use MCP; for anything complex, joined, or larger than 100 rows, use the CLI.
 
+**Availability:** the two surfaces are gated differently. The `table` MCP tool works on any table the workspace can access. The `clay tables` query surface requires **API table sync** to be enabled for the workspace — available on Enterprise plans. Without it, `clay tables query` and `clay tables update --query-enabled true` fail with `auth_forbidden` ("API table sync is not enabled for this workspace"). That's an account limitation, not a bug or an auth problem — don't retry or re-login; use the MCP tool where it fits, and tell the user to contact Clay about Enterprise access for the rest.
+
 ## MCP tool: `table`
 
 Both modes use the `table` MCP tool with a `mode` parameter.
@@ -120,7 +122,7 @@ clay tables update tbl_abc123 --query-enabled false
 Two things to know:
 
 - **Not instant.** Enabling prepares the table for querying in the background, so it isn't queryable the moment `update` returns — larger tables take longer. A `query` run too soon may return no/partial rows; retry after a short wait.
-- **Limited per workspace.** A workspace can only have so many tables enabled at once, and the cap depends on your plan. Check where you stand with `clay tables query-usage` (returns `{ used, limit }`); at the cap, disable a table before enabling another.
+- **Limited per workspace.** A workspace can only have so many tables enabled at once. Check where you stand with `clay tables query-usage` (returns `{ used, limit }`); at the cap, disable a table before enabling another. A `limit` of 0 means API table sync isn't enabled for the workspace at all (see the availability note above).
 
 ### Run a structured query
 
