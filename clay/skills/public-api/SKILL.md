@@ -12,8 +12,9 @@ in a shell (use the `cli` skill for those).
 ## What it offers
 
 - **Search** — find people or companies in Clay's GTM database using **structured filters**. Discover
-  valid filter fields with `GET /searches/fields?source_type=people` (or `companies`), start a search with
-  `POST /searches`, then page with `POST /searches/{search_id}/next`. The CLI
+  valid filter fields with `GET /search/filters-mode/fields?source_type=people` (or `companies`), start a
+  search with `POST /search/filters-mode`, then page through the results (see the API reference for the
+  exact pagination route). The CLI
   equivalent is `clay search` — see the `search` skill. Prefer the CLI for one-off searches
 - **Tables** — structured queries against Clay tables.
 - **Routines / batches** — async routine and batch runs.
@@ -28,9 +29,17 @@ clay api-keys create --name "<name>"   # → { ..., "apiKey": "<secret>" }
 ```
 
 CLI-created keys are always scoped to the public API. The `apiKey` secret is returned
-**only once**, at creation — store it immediately; it can't be retrieved later. Send it
-as a Bearer token against `https://api.clay.com/public/v0`. Manage existing keys with
+**only once**, at creation — store it immediately; it can't be retrieved later. Send it in the
+`clay-api-key` request header against `https://api.clay.com/public/v0` — **not** as a `Bearer`
+token (a `Bearer` header returns 401). Manage existing keys with
 `clay api-keys list | update | delete`.
+
+Smoke-test the key:
+
+```bash
+curl -H "clay-api-key: $CLAY_API_KEY" https://api.clay.com/public/v0/me
+# → { "user": {...}, "workspace": {...} }
+```
 
 ## Reference
 
