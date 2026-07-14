@@ -42,9 +42,22 @@ see [Run the `setup` skill](#run-the-setup-skill) below. Once setup finishes, de
 (`rm -rf /tmp/clay-agent-plugins`) — whichever path the skill picked already copied what it
 needs to a permanent location.
 
+### Droid
+
+```
+droid plugin marketplace add https://github.com/clay-run/agent-plugins
+droid plugin install clay@agent-plugins
+```
+
+The marketplace name is derived from the repo (`agent-plugins`); confirm the exact
+`clay@<marketplace>` id with `droid plugin marketplace list`, or install interactively from
+the `/plugins` UI (Browse tab). Droid loads the plugin's skills and MCP server; like Codex and
+Cursor it invokes a bare `clay`, so run the **`setup` skill** below to put `clay` on PATH and
+sign in.
+
 ## Run the `setup` skill
 
-Once installed, run the bundled **`setup` skill** now, in this session, before anything else below. It puts `clay` on PATH (needed on Codex and Cursor), signs you in, and verifies both the CLI and the MCP server work.
+Once installed, run the bundled **`setup` skill** now, in this session, before anything else below. It puts `clay` on PATH (needed on Codex, Cursor, and Droid), signs you in, and verifies both the CLI and the MCP server work.
 
 **Important — restarting your agent afterward is not optional:** `clay mcp` resolves its session once at startup, so an already-running MCP server won't see a sign-in that happened after it launched — skipping the restart is the most common reason `clay login` looks like it worked but the MCP tools still fail. How you restart is platform-specific; see the skill for the exact steps.
 
@@ -52,7 +65,7 @@ Once installed, run the bundled **`setup` skill** now, in this session, before a
 - If it doesn't, or the skill doesn't show up right after installing (some platforms don't register a newly installed plugin until restarted), locate `SKILL.md` yourself and follow it like a runbook:
 
   ```
-  find ~/.codex ~/.cursor ~/.claude ~/.config -type f -path '*/skills/setup/SKILL.md' 2>/dev/null | sort | tail -n1
+  find ~/.codex ~/.cursor ~/.claude ~/.factory ~/.config -type f -path '*/skills/setup/SKILL.md' 2>/dev/null | sort | tail -n1
   ```
 
   Read the path that prints and carry out its steps directly.

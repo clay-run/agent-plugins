@@ -62,7 +62,7 @@ clay whoami; echo "exit_code=$?"
 
 - **`clay: command not found`** (or exit 127) → the CLI isn't on your PATH. On Cursor, do
   step 2 first (it decides where the plugin's files permanently live); then do step 3, then
-  step 4. On Claude Code and Codex, skip step 2 and go straight to step 3, then step 4.
+  step 4. On Claude Code, Codex, and Droid, skip step 2 and go straight to step 3, then step 4.
   Exception: exit 127 with a JSON envelope on stderr saying `no bundled launcher found` is
   the forwarder from a previous setup reporting that the plugin cache itself is gone —
   reinstalling the forwarder won't help; tell the user to reinstall the Clay plugin instead
@@ -87,8 +87,8 @@ fallback) — then continue to step 3 below.
 ## 3. Put `clay` on your PATH (if it was "command not found", lacked `mcp`, or is an outdated version)
 
 Claude Code adds the plugin's `bin/` to PATH automatically, so this step is only
-needed in Codex and Cursor, or when another `clay` install is shadowing the bundled
-one.
+needed in Codex, Cursor, and Droid, or when another `clay` install is shadowing the
+bundled one.
 
 The plugin bundles the CLI launcher at `bin/clay` in the plugin root; it downloads
 and checksum-verifies the real binary on first use. The launcher is version-stable
@@ -98,10 +98,10 @@ just needs to point at the newest launcher on disk.
 Install a small forwarder onto your PATH (in `~/.local/bin`) that resolves the
 newest bundled launcher **at runtime** rather than baking in one absolute path.
 This is what lets it survive plugin updates (which install a new version directory)
-and work no matter which agent (Claude Code / Codex / Cursor) installed the plugin.
+and work no matter which agent (Claude Code / Codex / Cursor / Droid) installed the plugin.
 It picks the most-recently-modified launcher — an install-time heuristic that works
 across both version-named cache dirs (Claude/Codex) and commit-hash-named ones
-(Cursor). If one agent's cache lags behind another's, the freshest install wins, so
+(Cursor/Droid). If one agent's cache lags behind another's, the freshest install wins, so
 the CLI can briefly trail the newest pin until the caches converge — every launcher
 is self-contained, so it still runs a valid checksum-verified CLI.
 
@@ -116,6 +116,7 @@ sh -c 'ls -1dt \
   "${CODEX_HOME:-$HOME/.codex}"/plugins/cache/*/clay/*/bin/clay \
   "$HOME"/.cursor/plugins/cache/*/clay/*/bin/clay \
   "$HOME"/.cursor/plugins/local/clay/bin/clay \
+  "${FACTORY_CONFIG_DIR:-$HOME/.factory}"/plugins/cache/*/clay/*/bin/clay \
   "$HOME"/.config/clay-plugin/clay/bin/clay \
   2>/dev/null | head -n1'
 ```
@@ -135,15 +136,16 @@ mkdir -p "$HOME/.local/bin"
 cat > "$HOME/.local/bin/clay" <<'EOF'
 #!/bin/sh
 # Resolve the newest bundled clay launcher at runtime so this forwarder survives
-# plugin version bumps and works whichever agent (Claude/Codex/Cursor) installed it.
-# CLAUDE_CONFIG_DIR and CODEX_HOME relocate those agents' state roots (and with
-# them the plugin cache), so honor them when set — they expand here at runtime,
-# from the invoking process's environment.
+# plugin version bumps and works whichever agent (Claude/Codex/Cursor/Droid) installed it.
+# CLAUDE_CONFIG_DIR, CODEX_HOME, and FACTORY_CONFIG_DIR relocate those agents' state
+# roots (and with them the plugin cache), so honor them when set — they expand here
+# at runtime, from the invoking process's environment.
 launcher="$(ls -1dt \
   "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/*/clay/*/bin/clay \
   "${CODEX_HOME:-$HOME/.codex}"/plugins/cache/*/clay/*/bin/clay \
   "$HOME"/.cursor/plugins/cache/*/clay/*/bin/clay \
   "$HOME"/.cursor/plugins/local/clay/bin/clay \
+  "${FACTORY_CONFIG_DIR:-$HOME/.factory}"/plugins/cache/*/clay/*/bin/clay \
   "$HOME"/.config/clay-plugin/clay/bin/clay \
   2>/dev/null | head -n1)"
 # Match the launcher's bootstrap-failure contract: JSON envelope on stderr and a
@@ -235,6 +237,11 @@ actually respawns the MCP server depends on where you're running:
   enough. If the MCP tools still error, use Cmd/Ctrl+Shift+P →
   **Developer: Reload Window**; if that still doesn't pick it up, fully quit
   and reopen Cursor.
+- **Droid (CLI):** Droid spawns each plugin's MCP server once at startup, so a
+  new session in the *same* running process won't reconnect Clay. Exit the
+  process (`/exit` or Ctrl+C) and run `droid` again; if a background
+  `droid daemon` is running, restart it too. Confirm with
+  `droid mcp list` — the `clay` server should read `connected`.
 
 ## 5. Verify both surfaces
 

@@ -1,0 +1,14 @@
+{
+  "name": "clay-plugins",
+  "description": "Official Clay plugins for Droid",
+  "owner": {
+    "name": "Clay"
+  },
+  "plugins": [
+    {
+      "name": "clay",
+      "source": "./clay",
+      "description": "Build with Clay in Droid"
+    }
+  ]
+}

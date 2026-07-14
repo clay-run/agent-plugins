@@ -7,7 +7,7 @@
 
 <p align="center">
   <strong>Build with Clay in your AI coding agent</strong> — skills, MCP tools, and the <code>clay</code>
-  CLI, for Claude Code, Codex, and Cursor.
+  CLI, for Claude Code, Codex, Cursor, and Droid.
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
 
 Clay is a go-to-market data and automation platform — search for companies and
 people, run enrichment routines, and query tables, all from natural language.
-This repo is the plugin marketplace for `clay`: one plugin source, three
+This repo is the plugin marketplace for `clay`: one plugin source, four
 coding-agent targets, sharing one set of skills and one CLI.
 
 ## Example
