@@ -16,6 +16,10 @@ Whatever you're doing in Clay, work transparently so the user can follow along:
   in plain language, referring to things by their human-readable names.
 - **Summarize, don't dump.** Turn raw command output (JSON, `jq`, `diff`) into a
   short takeaway, table, or count. Reserve raw output for when the user asks.
+- **Confirm the workspace once.** The first time you use Clay in a session, run
+  `clay whoami` and tell the user which workspace (id) and user you're authenticated
+  as. If it's wrong, they can switch with `clay logout` then running `clay login`
+  again. If whoami fails on auth, run the `setup` skill.
 
 ## Answering "what can I do with Clay?"
 
@@ -81,6 +85,14 @@ If you are unsure what to surface, ask the user. There are often multiple ways t
 so when the choice is ambiguous, do not pick one arbitrarily.
 
 ## Cost & budget
+
+**Credit-consuming actions spend the user's money — always check in with the user and get
+their explicit go-ahead before running one.** Never kick one off on your own initiative or
+"to be helpful." First show the user the estimated cost and the remaining balance, then wait
+for them to confirm.
+
+Actions that consume credits (or count against plan/search limits) and require a check-in
+first include running a routine, testing or resuming a workflow, and some types of search.
 
 Before running a credit-consuming routine, check its per-item `estimatedCreditCost`
 (`clay routines get <id>`) against the remaining workspace balance (`clay credits`). See the

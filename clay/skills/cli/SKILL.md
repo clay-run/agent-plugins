@@ -24,13 +24,15 @@ clay <group> <cmd> --help   # exact flags, JSON output shape, and error codes
 
 ## Prefer simple, single commands
 
-Prefer running one plain `clay` command at a time. Avoid chaining, redirecting, or
-substituting (`;`, `&&`, `||`, `>`, `$(…)`, backticks, `$VAR`, etc.) unless it's genuinely
+Prefer running one plain `clay` command at a time. Avoid redirecting or
+substituting (`&&`, `||`, `>`, `$(…)`, backticks, `$VAR`, etc.) unless it's genuinely
 necessary — those forms fall through to a manual approval prompt, whereas a simple
 `clay <group> <cmd>` call is auto-approved.
 
 Piping (`|`) is fine when the other stages are common read-only helpers like `jq` that
-transform stdin without opening files. Piping into anything else falls through to a prompt.
+transform stdin without opening files. Semicolon chaining (`;`) is narrower: each
+clause must be `clay`, or a literal `echo` / `printf` (not `cat` / `jq` / …). Anything
+else falls through to a prompt.
 
 ## When to use the CLI vs the Public API
 

@@ -96,6 +96,7 @@ Example condition (headcount ≤ 50 AND title contains "CTO"):
 ### Trigger nodes and leaf nodes
 
 - Every workflow has a **trigger node** as its first node — this defines how the workflow gets launched (audience segment, webhook, Clay table, or manual). The trigger node's outputs become the inputs for the nodes it connects to.
+- **Trigger edge constraint:** a trigger may have zero or one direct outgoing edge, never more. Before adding an edge from a trigger, inspect its `outgoingEdges`. If it already has a target, do not add another direct edge; add work downstream instead, or ask the user whether to rewire the workflow. Before validating or running, each trigger must be connected to one first executable node.
 - **Leaf nodes** are nodes with no downstream connections. They are automatically treated as terminal — you do not need to mark them.
 
 ## Triggers — how workflows get launched
@@ -179,6 +180,14 @@ Wire the action's parameters with `inputMappingConfig` on the tool entry — eac
 For actions whose fields depend on an earlier input (e.g. an object type that reveals a different field set), resolve the real `objectTypeId` values and `fields|<sub>` keys with `clay workflows actions dynamic-fields` before mapping — don't guess them.
 
 See `data-passing.md` for `inputMappingConfig` types (`static` / `reference` / `llm` / `skip`), the `parent|sub` pipe convention, resolving dynamic fields, and both tool-node gotchas (shared-tool mappings, and dropped `inputSchema` variables).
+
+## Enabling batching on a tool node
+
+Some actions support batching multiple workflow runs into a single provider call, dramatically cutting cost/rate-limit pressure for high-volume workflows. Not every action supports it, and the action catalog doesn't flag which ones do — so treat batching as something you enable on request and let `edit_node` confirm support.
+
+Set `batchRunSettings: { "enabled": true, "maxBatchSize": <n> }` on a tool node via `edit_node` to turn it on — `maxBatchSize` is optional and gets clamped to the action's real maximum. **Only set this when the user explicitly raises batching, rate limits, or handling large volumes of rows/runs — never proactively.** If the action doesn't support batching, `edit_node` rejects the request with an error — relay that to the user rather than retrying.
+
+`batchRunSettings` can only be set on a tool node that already has its `tools` field configured — if you're creating the node and enabling batching in the same conversation turn, do it as two separate `edit_node` calls (create with `tools` first, then enable batching in a follow-up call).
 
 ## Passing data between nodes
 

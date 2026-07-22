@@ -237,6 +237,33 @@ terminal instead, then poll:
 clay whoami; echo "exit_code=$?"   # poll this until exit_code=0
 ```
 
+**Codex specifically:** the shell tool's timeout is usually shorter than the
+5-minute browser round-trip, so a foreground `clay login` gets killed
+mid-sign-in. The flow itself works on a local Codex session — approved commands
+run on the user's machine, outside the sandbox — it just has to survive the
+timeout. The recipe:
+
+1. Run `clay login` in the background so the 5-minute wait survives the tool
+   timeout:
+
+   ```bash
+   nohup clay login >/tmp/clay-login.out 2>/tmp/clay-login.err &
+   ```
+
+2. Read the sign-in URL from `/tmp/clay-login.err` and show it to the user to open
+   in their own browser (`clay login` also tries to open the browser itself — the
+   URL is the fallback). URLs from earlier attempts won't work.
+3. Do NOT try to complete the sign-in with Codex's built-in browser tool: the user
+   isn't driving it, so their credentials aren't available to enter — and if it
+   runs in an isolated or remote context it can't reach the `127.0.0.1` callback
+   anyway, so the sign-in is throwaway.
+4. Poll `clay whoami; echo "exit_code=$?"` until `exit_code=0`.
+5. Restart Codex per the note below so the running `clay mcp` server picks up the
+   session.
+
+If the backgrounded process dies (`clay whoami` never succeeds), fall back to the
+run-it-in-their-own-terminal flow above.
+
 **Restart the agent afterward** so the running MCP server picks up this session.
 A new chat/conversation is *not* the same as a restart everywhere — what
 actually respawns the MCP server depends on where you're running:
