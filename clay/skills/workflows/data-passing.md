@@ -154,7 +154,7 @@ agent node pins one (`sourceNodeId` + `sourcePath`) and reference it by name in
   "inputSchema": {
     "type": "object",
     "properties": {
-      "owner_name": { "type": "string", "sourceNodeId": "wfn_enrich", "sourcePath": "$.toolResult.result.name" }
+      "owner_name": { "type": "string", "sourceNodeId": "wfn_enrich", "sourcePath": "$.result.name" }
     }
   },
   "tools": [
@@ -175,25 +175,24 @@ mapping persisted.
 
 ### Output structure of enrich (tool) nodes
 
-Enrich (tool) nodes wrap their action result in a `toolResult` envelope at runtime. The raw action
-outputs are nested under `toolResult.result`, not at the top level. When writing `inputRefs`
-or `sourcePath` expressions that point at an enrich (tool) node, you must account for this envelope:
+An enrich (tool) node's outputs are flat: the Clay action's returned fields are under `result`, and
+its success flag is `success` — both at the top level. When writing `inputRefs` or `sourcePath`
+expressions that point at an enrich (tool) node, address the action's fields under `$.result.*`:
 
 ```json
-{ "sourceNodeId": "wfn_enrich_company", "sourcePath": "$.toolResult.result.name" }
+{ "sourceNodeId": "wfn_enrich_company", "sourcePath": "$.result.name" }
 ```
 
-The actual top-level keys of an enrich (tool) node's outputs are always `toolResult` (and `usage`).
-Everything the Clay action returned is inside `toolResult.result.*`.
+Everything the Clay action returned is inside `$.result.*`; `$.success` is the action's success flag.
 
 To discover the exact field names, either:
 
 1. Check the `recentOutputPaths` field on the node (populated from the most recent run), or
 2. Run the action once with `execute_clay_action` and look at the returned fields — those keys
-   will be available as `$.toolResult.result.<field>`.
+   will be available as `$.result.<field>`.
 
 **Example:** if `execute_clay_action` returns `{ "name": "Acme", "domain": "acme.com" }`, the
-correct paths are `$.toolResult.result.name` and `$.toolResult.result.domain`.
+correct paths are `$.result.name` and `$.result.domain`.
 
 ## Discovering an action's dynamic fields
 

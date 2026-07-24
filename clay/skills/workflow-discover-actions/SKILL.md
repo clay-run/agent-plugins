@@ -33,6 +33,8 @@ Each catalog entry has:
   - `appAccountId` / `appAccountName` — bound credentials
 - `availableAppAccounts` — app accounts the user has connected (for actions requiring API keys)
 - `priorityTier` — lower is better (0 = functions, 1 = Clay first-party, 2 = has app account, 3 = Clay credits, 4 = requires key)
+- `packageDisplayName` — human-readable provider name (e.g. "Salesforce"); **absent on workspace-function entries** (`priorityTier: 0`), so guard for it in jq (`.packageDisplayName // ""`)
+- `actionLabels.type` — the action's capability type (e.g. `"Send Data"`); can be a single string **or an array of strings**, so match with both shapes in mind
 
 The catalog has no input field names. **Before wiring any input, fetch the real
 names with `clay workflows actions schema` (see below) — never guess them**, or
@@ -74,6 +76,52 @@ jq -r '.data[] | select(.name | test("email";"i")) | "\(.priorityTier) \(.packag
 ```
 
 Prefer actions with lower `priorityTier` values and existing `configuredTools`.
+
+### Never tell the user a capability is missing without searching for it first
+
+The catalog is the source of truth for this workspace. Before you say something
+like "there's no native Salesforce write action" or "you'll have to do that with
+a raw API call", you MUST actually search the catalog for it — do not answer from
+memory or from the user's phrasing. Provider write actions are the most commonly
+missed, because their `displayName`s are generic ("Create Record", "Upsert
+Object") and their `description`s rarely contain words like "write" or "sync", so
+a naive keyword grep misses them. Search two ways before concluding anything:
+
+1. **By provider**, using `packageDisplayName` (**absent on workspace-function
+   entries** — guard it with `// ""` or the `test()` call throws on the first
+   function and aborts before printing any real matches):
+   ```bash
+   jq -r '.data[] | select((.packageDisplayName // "") | test("salesforce";"i")) | "\(.packageId) \(.actionKey) — \(.displayName) [\(.actionLabels.type // "")]"' /tmp/clay-actions-catalog.json | sort
+   ```
+2. **By capability** (see the write-action note below).
+
+Only after both searches genuinely come up empty may you say the capability is
+unavailable — and phrase it as "I don't see it in *this workspace's* catalog",
+not "it doesn't exist" or "it isn't supported". When it's absent, give the user a
+next step: suggest confirming the app/action is connected and enabled for the
+workspace, and offer a concrete workaround rather than a flat no.
+
+### Finding write / "send data" actions (CRM upserts, etc.)
+
+Writing back to a CRM or other destination ("write to Salesforce", "create a
+HubSpot contact", "update the record") is a native action — not something to
+hand-roll with an HTTP call. These actions carry `"Send Data"` in
+`actionLabels.type` (their tags usually include `CRM` and `EXPORT`). `type` can
+be a single string or an array of strings — don't rely on `actionKey` naming to
+spot them; each provider names its write actions differently (e.g. Salesforce's
+`create-object`/`update-object`/`upsert-object`, HubSpot's
+`hubspot-create-object`, Clay Labs' `upsert-audiences-record`). List every write
+action available in the workspace with:
+
+```bash
+jq -r '.data[] | select(([.actionLabels.type] | flatten | index("Send Data"))) | "\(.packageDisplayName // ""): \(.actionKey) — \(.displayName)"' /tmp/clay-actions-catalog.json | sort
+```
+
+For Salesforce specifically the package is "Salesforce" and the write actions are
+`create-object`, `update-object`, and `upsert-object`; `upsert-object` is usually
+the right choice for "write back onto the record" (it needs an external ID
+field). Confirm these are absent from the catalog before telling the user to pick
+some other write-back mechanism.
 
 ### When several actions fit, ask the user — don't pick silently
 

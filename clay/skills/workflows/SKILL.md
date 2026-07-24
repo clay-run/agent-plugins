@@ -57,6 +57,8 @@ Agent nodes can have tools attached via the **Claygent configuration** (this is 
 
 A tool node executes a single Clay action directly — no LLM reasoning. Configure it with exactly one tool in the `tools` field and it runs that action with inputs filled from upstream.
 
+Do not back a tool node with the Use AI, ChatGPT schema mapper, Claude, Gemini, or Claygent actions — these LLM actions are rejected on tool nodes. When the work needs an LLM (summarizing, drafting, classifying, extracting), use an agent (Claygent) node instead.
+
 Ask the user which Clay action they want to use. To learn an action's exact input/output shape, run it once with `execute_clay_action` before wiring it into the node — that confirms both that the workspace has the action available and what fields it expects.
 
 ### Conditional nodes (`nodeType: "conditional"`)
@@ -95,7 +97,9 @@ Example condition (headcount ≤ 50 AND title contains "CTO"):
 
 ### Trigger nodes and leaf nodes
 
-- Every workflow has a **trigger node** as its first node — this defines how the workflow gets launched (audience segment, webhook, Clay table, or manual). The trigger node's outputs become the inputs for the nodes it connects to.
+- Workflows start empty. Create a **trigger node** plus at least one trigger before the workflow can run end-to-end. A live **manual** trigger is the usual entry point for test/`clay` runs. Additional launch paths get their **own** trigger nodes — do not stack webhook/audience/scheduled onto the manual node.
+- Creating a trigger via MCP (`surfaces_edit` / trigger surface) returns `workflowNodeId`. Wire the first action nodes with `incomingEdges` from that id.
+- **Audience multi-segment sharing:** multiple `audience_segment` triggers (different `segmentId`s) may share one trigger node when they have the **same trigger type** and the **same outgoing edge**. Multiple `audience_scheduled` triggers may share a node when they also have the **same schedule**. Pass an explicit `workflowNodeId` to bind/share; omit it (or pass `createTriggerNode: true`) to get a new node. Do not mix `audience_segment` with `audience_scheduled` on one node. `audience_manual` is a run companion created by the UI/run path — do not create it via the surface.
 - **Trigger edge constraint:** a trigger may have zero or one direct outgoing edge, never more. Before adding an edge from a trigger, inspect its `outgoingEdges`. If it already has a target, do not add another direct edge; add work downstream instead, or ask the user whether to rewire the workflow. Before validating or running, each trigger must be connected to one first executable node.
 - **Leaf nodes** are nodes with no downstream connections. They are automatically treated as terminal — you do not need to mark them.
 
@@ -105,10 +109,10 @@ A workflow doesn't run by itself. It runs because a **trigger** kicks off a run.
 
 - **Audience segment trigger** — every record in a Clay audience segment becomes a run input. Useful for batch-style enrichment over a known list.
 - **Scheduled trigger** — fires one contextless workflow run per schedule tick. Provide `scheduleConfig` with either a simple or custom recurrence.
-- **Audience scheduled trigger** — reruns all current members of an audience segment on each schedule tick. Provide `segmentId`, `entityType`, and `scheduleConfig`.
-- **Webhook trigger** — an external system POSTs to a URL and each request becomes a run.
+- **Audience scheduled trigger** — reruns all current members of an audience segment on each schedule tick. Provide `segmentId`, `entityType`, and `scheduleConfig`. May share a trigger node with other `audience_scheduled` triggers that use the same schedule and outgoing edge (pass their `workflowNodeId`).
+- **Webhook trigger** — an external system POSTs to a URL and each request becomes a run (own trigger node).
 - **Clay table trigger** — new rows added to a specific Clay table create runs automatically.
-- **One-off / batch test runs** — the user (or the `clay` CLI) launches a single run or a batch for testing.
+- **One-off / batch test runs** — the user (or the `clay` CLI) launches a single run or a batch for testing via a manual trigger (create one if the workflow does not have one yet).
 
 When designing a workflow, ask the user how the workflow will be triggered, because that determines:
 
@@ -116,7 +120,7 @@ When designing a workflow, ask the user how the workflow will be triggered, beca
 - Whether the workflow should be optimized for one-at-a-time or high-volume runs
 - Whether leaf node output goes back to a Clay table, a webhook response, etc.
 
-If the user hasn't picked a trigger, recommend the simplest option that fits their use case and tell them where to configure it in the UI after the workflow is built.
+If the user hasn't picked a trigger, recommend the simplest option that fits their use case and create it via the trigger surface.
 
 ## Required fields for new nodes
 
@@ -218,11 +222,11 @@ The reference is `sourceNodeId` + `sourcePath` inline on the property. Use `sour
 
 **Tool nodes are different** — their action parameters are wired in `tools[].inputMappingConfig` (`static` / `reference`), not in `inputSchema`. Do not add intermediate variables to a tool node's `inputSchema`; non-action-parameter properties are dropped on save. See `data-passing.md` for the full reference.
 
-**Important — enrich (tool) node output paths:** Enrich (tool) nodes wrap their Clay action result in a
-`toolResult` envelope. The action's fields are at `$.toolResult.result.<field>`, never at `$.<field>`
-directly. Always check the node's `recentOutputPaths` field (visible via `read`) or run
-`execute_clay_action` first to see which fields the action returns — then prefix them with
-`$.toolResult.result.`. For example: `$.toolResult.result.name`, `$.toolResult.result.domain`.
+**Important — enrich (tool) node output paths:** An enrich (tool) node's Clay action fields are at
+`$.result.<field>`, and its success flag is at `$.success`. Always check the node's
+`recentOutputPaths` field (visible via `read`) or run `execute_clay_action` first to see which
+fields the action returns — then prefix them with `$.result.`. For example: `$.result.name`,
+`$.result.domain`.
 
 ## Recommended workflow for building
 
