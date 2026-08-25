@@ -41,6 +41,7 @@ arch="$(uname -m)"
 case "$os" in
   Darwin) os="darwin" ;;
   Linux) os="linux" ;;
+  MINGW* | MSYS* | CYGWIN*) die "validation_error" "clay: native Windows is not supported yet (no Windows CLI binary is published) — run Claude Code, Codex, or Cursor inside WSL instead" 2 ;;
   *) die "validation_error" "clay: unsupported OS: $os" 2 ;;
 esac
 case "$arch" in
