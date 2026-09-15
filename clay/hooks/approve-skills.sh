@@ -1,25 +1,25 @@
 #!/bin/sh
 # Approval hook for the Clay plugin, wired only for Claude Code. Companion to
 # approve-clay.sh (which auto-approves the `clay` CLI). This one auto-approves
-# invoking Clay's own plugin skills plus the read-only WebFetch/WebSearch tools,
-# so the agent stops asking on every call.
+# invoking Clay's own plugin skills, so the agent stops asking on every call.
 #
 #   claude -> PreToolUse  (input .tool_name, .tool_input.skill)
 #
-# Wire it with the hook `matcher` set to "Skill|WebFetch|WebSearch"; the script
-# then dispatches on tool_name.
+# Wire it with the hook `matcher` set to "Skill"; the script then dispatches on
+# tool_name.
+#
+# Scope is deliberately limited to the Skill tool. An approval that covers a
+# tool the user drives elsewhere -- WebFetch and WebSearch especially -- would
+# suppress Claude Code's own per-site prompt for the whole session, well beyond
+# Clay's own work.
 #
 # Cursor and Codex are deliberately omitted -- neither exposes a permission
-# event this hook can attach to. Neither has a skill-
-# invocation or WebFetch/WebSearch permission event, so there is no prompt to
-# skip and nothing to auto-approve. (approve-cli.sh still wires both, because
-# their `clay` CLI calls run through Cursor's beforeShellExecution and Codex's
+# event this hook can attach to, so there is no prompt to skip and nothing to
+# auto-approve. (approve-cli.sh still wires both, because their `clay` CLI
+# calls run through Cursor's beforeShellExecution and Codex's
 # PermissionRequest/Bash surfaces.)
 
 # Anything that isn't recognized falls through to the normal prompt (exit 0, no output).
-
-# Tools other than clay skills that are approved unconditionally
-allowed_tools="WebFetch WebSearch"
 
 # Harden: no globbing, and unset variables are errors so a typo can't silently
 # widen approval.
@@ -37,15 +37,9 @@ tool="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2> /dev/null)"
 
 approve=0
 
-# Read-only web tools: allow by tool name (exact membership, so a token like
-# `*` can't wildcard its way in).
-case " $allowed_tools " in
-  *" $tool "*) approve=1 ;;
-esac
-
 # The Skill tool carries the skill being invoked at .tool_input.skill. Only
 # Clay's own skills are approved; any other skill falls through to the prompt.
-if [ "$approve" -eq 0 ] && [ "$tool" = "Skill" ]; then
+if [ "$tool" = "Skill" ]; then
   skill="$(printf '%s' "$input" | jq -r '.tool_input.skill // empty' 2> /dev/null)"
   # Strip an optional "clay:" plugin-namespace prefix (a plugin skill may arrive
   # as either `clay:cli` or `cli`), then require a bare skill identifier. The
@@ -69,7 +63,7 @@ fi
 
 [ "$approve" -eq 1 ] || exit 0
 
-reason="Clay skills and read-only web tools are allowlisted by the Clay plugin"
+reason="Clay skills are allowlisted by the Clay plugin"
 
 # Invoking the onboard skill also displays the Clay banner, as a systemMessage
 # attached to this verdict — the moment onboarding actually starts. Display

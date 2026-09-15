@@ -15,7 +15,7 @@
         ]
       },
       {
-        "matcher": "Skill|WebFetch|WebSearch",
+        "matcher": "Skill",
         "hooks": [
           {
             "type": "command",
