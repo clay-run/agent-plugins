@@ -68,6 +68,27 @@ functions, a `createdBy` (`{ id, name, email }`; `null` for managed ones). Use t
 the user which functions are Clay-managed vs. their team's own, and who authored a custom
 one — e.g. group them by `source`, or note the author when disambiguating similar functions.
 
+### Workflow functions
+
+Workflow functions are functions backed by workflows. Their callable id is
+`workflow:<workflowId>`, not `function:<workflowId>`. Discover them with
+`clay workflows actions search` or `clay functions list` (includes published workflow functions when enabled).
+Function listing returns workflow functions first, then table functions, newest first within each group.
+Follow pagination cursors to reach table functions; the first page is not the newest functions overall.
+Inspect a workflow function with `clay functions get workflow:<workflowId>` before registration.
+This returns the published input/output schemas and the underlying `id`. The `schema` string
+contains the published workflow implementation, like the implementation context returned for table functions.
+`candidateId` is a search identifier; do not use it as a routine id.
+
+Register a workflow function with `clay routines create workflow <workflowId> --name "My function"`
+using the raw `id`, then run it with `clay routines runs start workflow:<workflowId>`.
+Workflow functions need no `--entity-type`. Registration is required for routine execution,
+but not for inspection or inserting a `subworkflow_call` into another workflow.
+Direct routine runs use the workflow's normal manual trigger, including its configured snapshot pin.
+To test unpublished changes, set that trigger's `snapshotId` to `latest` with `clay workflows triggers update`.
+Read `clay routines get workflow:<workflowId>` for the inputs accepted by a direct run.
+A `subworkflow_call` uses the latest published version by default; function inspection describes that published version.
+
 ### Create a routine from an existing function or workflow
 
 If no routine exists yet for a function (a table) or a workflow, expose it as a runnable

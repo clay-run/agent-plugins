@@ -59,7 +59,8 @@ If creation returns an error, report it and do not retry automatically. Smartlea
 1. Use `list` to find campaigns when the user has not identified one. Search and filters are optional; do not invent a status filter.
 2. Use `get` for the full selected campaign. It returns settings, agent context, enabled skills, audience references, variants, step ids, subjects, bodies, editable text projections, and `leadFields` — the lead fields this campaign already references, with their labels and whether each is required. New-thread steps expose `subject`; replies expose the inherited read-only `threadSubject` instead.
 3. Use `analytics <campaign-id>` for outcome questions about one campaign, preserving the user's date range and timezone. To rank campaigns against each other, use `list --with-analytics`, which returns lifetime totals for every campaign in a single call. Do not loop `analytics` over many campaigns. Compare windowed figures only when the requested windows are equivalent.
-4. Unsupported campaign document nodes are returned as raw JSON. Explain them accurately, but treat affected content as read-only rather than guessing a text conversion.
+4. For per-lead activity — replies, out-of-office, bounces, unsubscribes, lead categories, the Campaign events table, or workflows and columns built on it — read `campaigns-events` for what each event type means and its quirks.
+5. Unsupported campaign document nodes are returned as raw JSON. Explain them accurately, but treat affected content as read-only rather than guessing a text conversion.
 
 ## AI context workflow
 
@@ -206,6 +207,8 @@ Use internal identifiers returned by the mutation response for later commands. R
 Subjects and bodies are text projections. Use the exact text returned by `get`, including tokens and line breaks. Do not rewrite or normalize tokens the user did not ask to change. Never try to edit `threadSubject` or send a `subject` for a reply; edit the preceding new-thread step when the thread subject should change.
 
 Write bodies as ordinary markdown: a blank line between paragraphs renders as a blank line in the sent email, and a single newline is a line break with no gap (use it for signatures). Separate every paragraph with a blank line unless the user asks for lines run together.
+
+Bold (`**text**`) and italic (`*text*`) are the only text formatting a body can carry, and only when the campaign has HTML enabled. To format a token, wrap the whole token: emphasis inside spintax variants is saved as literal asterisks. Underline and fonts have no text form, and HTML tags such as `<u>` or `<b>` are sent to leads as literal characters. When asked for formatting you cannot write, apply the rest, say what you did not apply, and tell the user to select the text in the sequence editor and use its formatting toolbar (Ctrl/Cmd+U underlines).
 
 Body text is parsed as markdown, so `[` and `]` are link syntax. A bracketed phrase not followed by `(url)` fails validation with `Link label must be followed by "(url)"`. Write a real link or avoid the brackets; do not use them for placeholders or asides. The token grammar is:
 

@@ -15,8 +15,9 @@ publishing, testing, and presentation rules.
 
 ## Create or reuse the Claygent
 
-- To reuse a regular Claygent, find it with `clay claygents list --search <text>`, then set
-  only `agentClaygentId` on the node. Do not also send its name, prompt, model, or outputs.
+- To reuse a regular Claygent, find it with `clay claygents list --search <text>` and read it
+  with `clay claygents get <id>` to check its inputs, outputs, and tools. Then set only
+  `agentClaygentId` on the node. Do not also send its name, prompt, model, or outputs.
 - To create one, send `agentName`, `agentPrompt`, and `agentModel` together in the agent
   node's first `clay workflows nodes create` call. Use the user's requested model when it is
   available; do not silently substitute a different model.
@@ -38,6 +39,29 @@ publishing, testing, and presentation rules.
 
 If a write rejects an output field or schema, use the validation message to correct it
 before testing. Do not retry the same shape.
+
+If the user asks for a numeric score within a bounded set of ranges (for example "80–100
+strong, 35–65 mixed, 0–25 weak"), the Claygent prompt must say that the score has to fall
+inside one of those ranges.
+
+## Connected tools
+
+A Claygent's tools — MCP servers such as Linear or Notion, routines, document sources, and
+web search — are configured on the Claygent, not on the workflow node. An agent node's
+`tools` field is always empty, so it says nothing about what the Claygent can use. Read
+`clay claygents get <id>` and check `tools`, `internetSearchEnabled`, and
+`peopleAndCompaniesSearchEnabled`.
+
+An agent node's `agentInternetSearchEnabled` shows whether its Claygent can search the web.
+Set it with `clay workflows nodes update` to turn web search on or off for a regular
+Claygent; the change applies everywhere that Claygent runs. Clay models always search the
+web, so web search cannot be turned off for them.
+
+When the agent needs a resource behind authentication, such as a private Linear attachment,
+first look for a connected tool that already holds that account's credentials, and tell the
+Claygent in its prompt to use it. Do not build a separate fetch-and-rehost chain of workflow
+nodes for something a connected tool can reach. Connecting a new tool is done in the
+Claygent's settings in Clay.
 
 ## Choose the source
 

@@ -7,7 +7,7 @@ description: Clay workflows — plan, review, build, and edit automations with t
 
 Supporting files in this directory: `publishing.md`, `testing.md`, `data-passing.md`,
 `presenting.md`, `audiences.md`, `account-agents.md`, `run-analysis.md`, `node-groups.md`,
-`csv-triggers.md`, `table-primitives.md`, `table-waterfalls.md`.
+`csv-triggers.md`, `table-primitives.md`, `table-waterfalls.md`, `industry-mapping.md`.
 
 Read this skill before proposing a workflow plan, even when the user asks for no workspace
 queries or changes. For Audiences destinations or field mappings, also read `audiences.md`
@@ -19,6 +19,9 @@ catalog. Do not ask for a workflow ID just to discuss a complete supplied draft.
 is exactly `audience_enrichment`, read the complete
 `/workflows-audience-enrichment` skill and follow it together with this skill. Do not apply that
 specialized skill to a workflow whose type is null, absent, or any other value.
+
+For requests to create, inspect, edit, enable, disable, or delete a workflow alert rule, or to
+subscribe to a workflow's alert emails, read and follow the `/workflows-alerts` skill.
 
 ## Domain and working style
 
@@ -63,6 +66,12 @@ You are helping users build and edit Clay workflows.
   rules; when titles need judgment, use a small Claygent classification of supplied inputs
   before paid contact enrichment. Select existing candidate IDs and reuse the decision
   downstream; don't generate people or research externally when supplied fields suffice.
+- **Classify company verticals with Clay's industry mapping.** When a step decides a company's
+  vertical from its `industry` field (for example "is this a software company?") and the
+  vertical is in `industry-mapping.md`, use its `industry` values instead of writing your own
+  keyword match. For any other vertical, choose the matching values from the labels the records
+  actually carry (`clay audiences fields list-values industry --entity-type companies`), and
+  use a small Claygent classification when the label alone can't decide.
 
 Common node types (not just agent/tool — pick the type that fits the step):
 
@@ -73,8 +82,8 @@ Common node types (not just agent/tool — pick the type that fits the step):
     `--input` — separate calls can persist a blank prompt. Prefer `gpt-5.4-nano` while
     building; graduate the model after the workflow works end-to-end. One exception: a node
     you are about to make an account agent is created bare — see account agents below.
-  - **Reuse:** `clay claygents list --search <text>`, then send only `agentClaygentId` (the
-    returned `id`). Do not send `agentName` / prompt / model — `agentName` can rewrite that
+  - **Reuse:** `clay claygents list --search <text>` (read one with `clay claygents get <id>`),
+    then send only `agentClaygentId` (the returned `id`). Do not send `agentName` / prompt / model — `agentName` can rewrite that
     shared prompt.
 - **Tool nodes** (`nodeType: "tool"`) — run a single Clay action or Clay function. (UI may
   label these "Enrich" or "Function".) `tools` may be omitted while drawing an outline; before
@@ -101,10 +110,16 @@ Common node types (not just agent/tool — pick the type that fits the step):
   because the workspace does not have merge nodes enabled, do not retry; use a code node to
   produce the same named outputs.
 - **Delay nodes** (`nodeType: "delay"`) — pause a run before the next step without producing
-  data. Set integer `delaySeconds` from 1 to 86400 (24 hours) in the create or update `--input`. To
-  wait for a duration computed upstream instead, add a `delaySeconds` property to `inputSchema` with
-  type `number`, `sourceNodeId`, and `sourcePath`; it must resolve to a number of seconds from 1 to
-  86400 and overrides `delaySeconds`.
+  data. Set `delay` and `delayUnit` (`"seconds"`, `"minutes"`, `"hours"` or `"days"`) in the create
+  or update `--input`, up to 45 days in total. To wait for a duration computed upstream instead, add
+  a `delay` property to `inputSchema` with type `number`, `sourceNodeId`, and `sourcePath`; it
+  overrides `delay` and is read in `delayUnit`, so set `delayUnit` too. To wait until the next
+  occurrence of a recurring time, set `delayUntil` (the duration is ignored while it is set, and
+  `"delayUntil": null` clears it). Times are 24-hour `HH:mm` in an IANA timezone:
+  - `{"kind": "weekday", "weekday": 1, "time": "09:00", "timezone": "America/New_York"}` (0 = Sunday)
+  - `{"kind": "day_of_month", "day": 21, ...}`: `day` is 1–31 or `"last"`, and late days land on a
+    short month's last day
+  - `{"kind": "nth_weekday", "nth": 2, "weekday": 5, ...}`: `nth` is 1–4 or `"last"`
 - **Map / reduce / collect** (`nodeType: "map"` / `"reduce"` / `"collect"`) are retired: `nodes create`
   rejects them and existing ones fail when they run. For per-record work over a list, use list mode
   (see "List mode (Repeat)"); to aggregate the results, add a node downstream of the Repeat node,
@@ -116,7 +131,8 @@ Common node types (not just agent/tool — pick the type that fits the step):
 Do not collapse branching or deterministic transforms into Claygent/tool-only graphs when
 `conditional` or `code` is the right fit. Node type is fixed at create — choose before
 `nodes create` because it cannot be changed later. Read an existing node of the same type
-(`nodes get`) and copy writable fields from `.node` when the shape is unfamiliar.
+(`nodes get`) and copy writable fields from `.node` when the shape is unfamiliar; a read leaves
+out fields the node does not set, which this skill and `data-passing.md` describe.
 
 Wiring a node's inputs — `inputSchema` with `sourceNodeId`/`sourcePath`, and `inputMappingConfig`
 on tool nodes — is covered in `data-passing.md`. Read it before wiring the first input, and
@@ -141,7 +157,9 @@ Rules run top-to-bottom and the first match wins.
 Supported operators:
 
 - String: `Equal`, `NotEqual`, `Contain`, `NotContain`, `ContainAny`, `StartsWith`,
-  `NotStartsWith`, `EndsWith`, `NotEndsWith`, `Empty`, `NotEmpty`
+  `NotStartsWith`, `EndsWith`, `NotEndsWith`, `Empty`, `NotEmpty`, `GreaterThan`,
+  `GreaterThanOrEqual`, `LessThan`, `LessThanOrEqual`. The four comparisons coerce the
+  text with `Number()`; equality still compares the raw text.
 - Number: `Equal`, `NotEqual`, `GreaterThan`, `GreaterThanOrEqual`, `LessThan`,
   `LessThanOrEqual`, `Empty`, `NotEmpty`
 - Boolean: `True`, `False`, `Empty`, `NotEmpty`
@@ -279,6 +297,10 @@ and wait before binding the trigger. Do not pick a default and merely ask to pro
 **Audiences inside a workflow** (`upsert-audiences-record`, `audience_segment` trigger):
 `audiences.md`.
 
+**Ad lead form triggers** (`ad_lead_form`, Meta or LinkedIn lead gen forms) are created only in
+the workflow editor. When a workflow has one, or the user wants ad leads saved to Audiences, read
+the complete `/workflows-ad-lead-forms` skill and follow it together with this skill.
+
 **Draft vs live** and how test runs relate to publish: see `publishing.md` and `testing.md`.
 
 **Investigating run data** (failures, traffic, durations, credits, searching run content):
@@ -317,21 +339,27 @@ don't guess at flags.
   the current context names a workflow insertion target, pass its `type`, `nodeId`, and optional
   `handleId` through as `target` and describe the new node as `step`. Use this instead of manually
   creating and rewiring a node. The command reads the current graph and atomically preserves the
-  downstream path. Configure any remaining node fields afterwards with `nodes update`.
+  downstream path. Native waterfall candidates use `step.kind: "waterfall"` and `waterfallConfig`;
+  follow `/workflows-discover-actions` to map inputs and preserve provider order.
+  Configure other node fields afterwards with `nodes update`.
 - Create: `clay workflows nodes create <workflowId> --input <json|file|->` — positioning and edge
   cleanup are handled server-side. Read an existing node first (`nodes get`) and take fields from
   `.node` for the writable shape — it's dynamic per node type. Feeding the whole get envelope into
   `--input` is a validation_error.
 - Update: `clay workflows nodes update <workflowId> <nodeId> --input <json|file|->` —
-  only the fields in `--input` change.
+  only the fields in `--input` change. For native waterfalls, read `node.waterfallConfig`, modify
+  its shared inputs or provider input overrides, and send the complete `{ "waterfallConfig": ... }`
+  as a separate update. Preserve template selection, provider order, and provider IDs. This uses
+  the waterfall save path without executing providers; do not edit the generated call bindings
+  or hidden child nodes directly.
 - Delete: `clay workflows nodes delete <workflowId> <nodeId>` — edge cleanup handled
   server-side.
 - Test one node: `clay workflows nodes test <workflowId> <nodeId> --source-run <runId>`
   or `--inputs <json|file|->` — starts a partial run of only that node, then terminates.
   Nothing downstream of the node runs, so this is for debugging a node, never for recovering
   failed runs — see "Recovering failed runs" in `testing.md` for that. Returns immediately (does
-  not poll); inspect with `clay workflows runs get`. Exactly one of `--source-run` or `--inputs`
-  is required.
+  not poll); inspect with `clay workflows runs get`. Pass `--source-run`, `--inputs`, or both;
+  with both, `--inputs` replaces the matching inputs recorded in the source run.
 - Account agents (agent nodes backed by a platform-managed Claygent with account context):
   `clay workflows nodes create-account-agent <workflowId> <nodeId> [--name <name>]` links a new
   one, from the platform template, to an agent node that has no linked agent — create the node
@@ -393,15 +421,16 @@ for the user before changing them.
   `context.get_input("email")`; `get_input()` requires a key and has no zero-argument form. The
   same limits as code nodes apply: standard library only (without the modules listed under code
   nodes), no network, 1 second. **Before saving code with declared outputs, pass
-  `--output-schema` with the exact flat `outputSchema` you will
-  save on the node when the installed CLI offers that flag.** Check `clay workflows code test --help`;
+  `--output-schema` with the `outputSchema` you will save on the node — flat fields, or the
+  JSON Schema `nodes get` returns when the installed CLI's `--output-schema` help mentions JSON
+  Schema; older CLIs take only the flat map — when the installed CLI offers that flag.** Check `clay workflows code test --help`;
   if the flag is unavailable, test the saved node with `clay workflows nodes test` instead until the
   CLI is updated. Without the flag, success only means execution succeeded. Exits 0 even on handler
   or schema failure — require `.isError != true and .outputSchemaValidated == true` for a schema
   test.
 
 Both are single-shot previews. External CLI users have per-user daily caps (defaults ~25 action
-tests and ~10 code tests, overridable per workspace). Clay's built-in GTM Agent and Workflows
+tests and ~10 code tests, overridable per workspace). Clay's global agent and Workflows
 Sculptor are exempt.
 Use them to confirm an input/output shape,
 never to enrich or process a batch of records: for that use a managed routine
@@ -522,9 +551,13 @@ Always set `listEntriesRef` when turning list mode on: without it the node looks
 
 For tool nodes, map each input that should vary per item with `inputMappingConfig` `item`
 (`{ "type": "item", "path": "$.field" }`) — not a `reference` to the upstream list (that
-resolves to the whole aggregate). See `data-passing.md`. For code nodes, the current
-item is `context.input`. `listFailureMode` is `"fail_at_end"` (default) or
-`"ignore_errors"`.
+resolves to the whole aggregate). See `data-passing.md`. For list-mode code nodes, the item
+is under `input`: use `context.item`, `context["input"]`, or `context.input`. Code tests pass
+`--inputs` verbatim, so wrap each test item as `{"input":{"name":"Ada"}}`.
+`listFailureMode` is `"fail_at_end"` (default: fails the node if any item fails) or
+`"ignore_errors"` (keeps the successful items and continues). `ignore_errors` only covers a
+partially failed list: if every item fails — including a one-item list whose item fails — the
+node still fails and the run stops.
 
 **When to use it:** the same per-record work over a list (enrich each row, draft one message
 per lead), inline on one node. **When not:** a single aggregate step over the whole list — leave

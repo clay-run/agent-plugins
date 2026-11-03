@@ -78,6 +78,9 @@ enforce this: they only keep a tool the node already has, and otherwise create a
      "appAccountId": "app_xyz"
    }
    ```
+   A tool read back from `clay workflows nodes get` carries its `appAccountId` only when it has one,
+   and sending it back unchanged keeps the binding. Pass `"appAccountId": null` to remove the
+   account from a tool, or to create one with no account; omit it to keep the current account.
 
 Never load the full `clay workflows actions list` output into context; it can be megabytes.
 Save it to a file or filter with `jq`, returning only relevant actions and fields.

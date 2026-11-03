@@ -123,6 +123,17 @@ When attaching this action to a tool node, use:
 
 Every id in a `selected*` array MUST have a matching `<group>|<id>` binding, or the action returns `ERROR_BAD_REQUEST`.
 
+### Verify a writeback
+
+A workflow writeback can also change Clay-maintained system fields: `updated_at` moves,
+`external_source_sync_status_v3` gains an entry for the workflow, and `workflows` gains the
+workflow id the first time that workflow writes the record. These changes are expected and are
+not overwrites. When you check that a writeback
+preserved existing data, compare `clay audiences records get` output before and after on the
+fields you did not select for writing, and leave the system fields out of that comparison.
+`clay audiences fields list --entity-type <people|companies> --include-system` marks every system
+field with `isSystemField`.
+
 ### Search writeback defaults
 
 On the first configuration of a V2 Write to Audiences node downstream of search triggers,

@@ -18,9 +18,12 @@ _about_ billing or plans (confusing UX, a feature request) is still feedback and
 
 ## Steps
 
-1. **Determine type.** Default to `feedback`. Choose `bug` **only** when something that previously worked (or is established existing behavior) has **regressed** — it used to work and now doesn't. Choose `feedback` for everything else: missing behavior, feature requests, UX suggestions, confusing flows, "I expected X but Clay doesn't do that," errors that look like product gaps rather than regressions, and general product ideas. Missing behavior is feedback (closer to a feature request), not a bug. If unclear whether this is a regression, prefer `feedback`; only ask the user when they clearly mean either a regression or a request for new/missing behavior and you still can't tell which.
+1. **Determine type.** The test is: did Clay fail, or behave differently from how it is documented or built to work? First occurrences count, and you do not need to know whether it worked before.
+   - Choose `bug` for: errors, crashes, timeouts or hangs; failures on valid input; wrong, empty, stale or duplicated output; output that contradicts the docs or `--help`; data lost or changed unexpectedly; documented features that do not work.
+   - Choose `feedback` only when Clay worked as designed and the user wants something different: feature requests, capabilities Clay does not claim to have, UX or naming suggestions, working-but-confusing flows, general ideas.
+   - Tiebreaker: if the user saw an error or unexpected result while doing something Clay supports, use `bug`; if it is still ambiguous, use `bug` without asking.
 
-2. **Get feedback text.** Use the argument if provided (e.g. `/clay-feedback would love CSV export from the enrichment table`). Otherwise ask the user what feedback or bug report they'd like to send.
+2. **Get feedback text.** Use the argument if provided (e.g. `/clay-feedback would love CSV export from the enrichment table`). Otherwise ask the user what feedback or bug report they'd like to send. For a bug, include the command that was run, the error output, and expected versus actual behavior in the message.
 
 3. **Confirm.** Use your ask-user tool (`AskUserQuestion`; `askUser` inside the Clay app). List what the report will include, and offer "Send" / "Cancel":
 

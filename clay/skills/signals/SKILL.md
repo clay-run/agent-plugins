@@ -260,6 +260,15 @@ does not prove a signal is audience-based — check `input`.
 An audiences-based signal writes its output back to the audience entities as
 **signal activities**. Nothing appears in a table, so don't go looking for one.
 
+**Where the user sees it in the app.** An audiences-based signal is listed only
+under **Companies** (`ACCOUNT`) or **People** (`CONTACT`) → **Data hub** →
+**Signals**. It never appears on the **Signals** page in the main sidebar, which
+lists table-watching signals only. When a user asks where to find, check, or edit
+an audiences-based signal, send them to Data hub for its entity type. If they are
+on the Signals page and can't find it there, that is expected and does not mean
+the signal is missing. A table-watching signal is the reverse: it appears on the
+Signals page and not in Data hub.
+
 Its `input.audiences.segmentIds` are audience ids from `clay audiences list`, and
 `entityType` uses the middle spelling — `ACCOUNT` / `CONTACT`, not
 `companies` / `people`.

@@ -3,6 +3,11 @@
 How you wire data between nodes depends on the node type. There are two
 mechanisms; the shapes below are exactly what `clay workflows nodes create`/`update` accept and what `graph get` / `nodes get`
 returns — wire data this way, then `nodes get` / `graph get --mode full` to confirm it saved.
+You can edit by sending back the `node` from `nodes get` with your changes: a node read leaves out
+fields that have no value, and `null` clears a field (a field that cannot be cleared rejects it).
+Two exceptions: on an agent node, send only the fields you change, because sending its agent fields
+back can move a node pinned to an older agent version onto the current one; and send a waterfall
+node's `waterfallConfig` on its own, never alongside other fields.
 
 ## Method 1: Pinned inputs on agent nodes (typed, deterministic)
 
@@ -10,10 +15,11 @@ Use this when the data must be exact (a number, a boolean, a specific structured
 field), or comes from another node.
 
 The **upstream node** declares an `outputSchema` describing its structured output.
-It is a **flat map** of field name → `{ "type", "description" }` — allowed types are
-`string`, `number`, `boolean`, `email`, `url`, `select`. Every property **requires a
-`description`** — the write is rejected without one (`inputSchema` properties don't
-need descriptions):
+In its **flat shorthand** it is a map of field name → `{ "type", "description" }` —
+allowed flat types are `string`, `number`, `boolean`, `email`, `url`, `select`. Every
+flat field **requires a `description`** — the write is rejected without one
+(`inputSchema` properties don't need descriptions). The JSON Schema form is covered
+below:
 
 ```json
 {
@@ -51,19 +57,25 @@ The **downstream agent node** pins each input by adding `sourceNodeId` +
 The reference lives **inline on the property** (`sourceNodeId` + `sourcePath`).
 Use `sourcePath`, not `path`.
 
-`inputSchema` also accepts the flat shorthand shown for `outputSchema` (dropping
-the `type: "object"` + `properties` wrapper). The reverse is not true: `outputSchema`
-takes **only** the flat form — wrapping it in `type: "object"` + `properties` is
-rejected as a validation error.
+Both schemas accept the flat shorthand (dropping the `type: "object"` + `properties`
+wrapper) and the full JSON Schema form. The write side accepts exactly what the read side
+returns: for every node without a Claygent (code, conditional, terminal, ...), `nodes get`
+returns `outputSchema` as JSON Schema, and that value can be sent back unchanged through
+`nodes update` or `edit_node`. `code test --output-schema` takes it too when the installed CLI's
+`--help` mentions JSON Schema; older CLIs take only the flat map. Flat fields are all required;
+JSON Schema keeps its own `required` list. Agent nodes read and write flat fields only.
+Workflow function calls are the exception: their `outputSchema` comes from the published
+function and any `outputSchema` edit is rejected.
 
 **Schema validation happens in two stages.** A malformed schema is rejected when the node is
-created or updated. A valid schema whose values do not match fails when the node runs.
+created or updated. A valid schema whose values do not match fails when a code or merge node
+runs; other node types store the schema without run-time output checks.
 Input/trigger JSON Schema describes an email as `{"type":"string","format":"email"}`;
 `{"type":"email"}` is only a flat output-field type. Nullable type unions such as
 `["string","null"]` are unsupported. Every flat output field becomes required;
 `required:false` does not make it optional, and `null` is not a string. For code, use
-`code test --output-schema` with the exact field map and representative missing-data inputs
-before saving if the installed CLI offers the flag (`clay workflows code test --help`).
+`code test --output-schema` with the schema you will save (flat fields, or the JSON Schema from
+`nodes get` when the installed CLI's help mentions it) and representative missing-data inputs before saving if the installed CLI offers the flag (`clay workflows code test --help`).
 Otherwise, test the saved node with `nodes test`; an execution-only code test does not validate
 the schema. Use `nodes test` to check the saved schema and mappings in either case.
 

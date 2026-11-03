@@ -26,12 +26,52 @@ functions (`type: "subworkflow"`). “Workflow function” is the user-facing te
 when speaking with users, and recognize “subworkflow” as the same concept. Use
 “table function” to distinguish table-backed functions, and preserve technical
 identifiers such as `subworkflow` and `subworkflow_call` in API payloads.
+Only workflow functions can be called from a Workflow step. Publishing an
+ordinary workflow or registering it as a routine does not make it a workflow
+function. If node creation or `clay functions get workflow:<id>` reports that a
+workflow is not a workflow function, tell the user it cannot be called as a step
+instead of retrying.
 Functions may encapsulate
 multiple steps, including installed waterfalls. Compare both against the requested
 inputs and outputs; a suitable function can satisfy a capability without composing
 several actions.
 
-Prefer suitable Clay waterfalls over individual providers.
+Use a matching Clay waterfall or Clay’s Enrich Person or Enrich Company action
+for a lookup instead of an individual provider. A provider accepting fewer inputs
+is not a reason to bypass a matching Clay option: obtain the missing inputs first,
+and flag unresolved records if that fails. Reuse any requested information
+returned along the way. Use individual providers for capabilities these Clay
+options don’t cover, or when the user explicitly requests one.
+
+When native workflow waterfalls are enabled, search can also return `type: "waterfall"`.
+These candidates contain `templateId`, its `attribute`, and ordered `providers`
+(`actionPackageId` + `actionKey`). Parent results also include `parentTemplateId` and use
+their default child; standalone results use their own template ID. They are template
+descriptions, not function IDs or executable action IDs. Apply a candidate with
+`clay workflows nodes insert <workflowId> --input <json|file|->` using `step.kind: "waterfall"`,
+`step.name`, and `step.waterfallConfig`; read `clay workflows nodes insert --help` for its shape.
+Do not pass it to a function or action node, or expand it into separate provider nodes.
+
+Build `waterfallConfig` from the candidate's `attribute`,
+`templateSelection: { parentTemplateId, templateId }` (omit `parentTemplateId` for standalone templates),
+and ordered `providers`. Give every
+provider entry a unique `id` (including repeated providers), `authAccountId: null` for Clay's
+connection or an accessible provider connection ID, and
+`inputOverrides: { inputMappingConfig: {}, inputRefs: {} }`.
+Start with `sharedInputs: { inputMappingConfig: {}, inputRefs: {} }` and `validation: null`.
+Inspect the providers with `clay workflows actions schema <packageId> <actionKey>` to identify
+their required inputs and semantic types. Map shared inputs by semantic type, preserving upstream reference
+expressions and `inputRefs`; use provider parameter names for provider-specific overrides.
+Preserve the catalog's provider order and repeated entries. Use a unique node name based on
+the current graph. The insertion creates a native waterfall without executing providers. Unmapped inputs are allowed when information is missing, but do not
+run the workflow until the required inputs have been configured.
+
+To revise an existing native waterfall, read `clay workflows nodes get <workflowId> <nodeId>`
+(or the full graph) and modify `node.waterfallConfig`. Send the complete config using
+`clay workflows nodes update <workflowId> <nodeId> --input <json|file|->` with only the
+`waterfallConfig` field. Preserve the template selection, provider IDs and ordering, and any
+settings not being changed. Shared inputs use semantic types; provider input overrides use
+provider parameter names. Never update the generated call bindings or hidden child nodes directly.
 
 1. Identify the inputs available at the insertion point from the conversation and
    existing workflow inspection. For an existing workflow, use
@@ -53,7 +93,7 @@ Prefer suitable Clay waterfalls over individual providers.
 
    ```bash
    clay workflows actions search "<capability>" --limit 10 > enrichment-search-work-email-1.json
-   jq '.candidates[] | {type, candidateId, name: (.displayName // .name), packageId, actionKey, functionId, workflowId, description, score, creditCost, requiresApiKey, appAccountType, requiredInputNames, requiredInputCombinations, inputs: [.inputParameters[]? | {name, type: (.type // .typeSettings.type), optional}], functionInputs: ((.inputSchema.properties // {}) | keys), functionOutputs: ((.outputSchema.properties // {}) | keys), outputs: [.outputParameters[]? | {outputPath, semanticType}]}' enrichment-search-work-email-1.json
+   jq '.candidates[] | {type, candidateId, name: (.displayName // .name), packageId, actionKey, functionId, workflowId, parentTemplateId, templateId, attribute, providers, description, score, creditCost, requiresApiKey, appAccountType, requiredInputNames, requiredInputCombinations, inputs: [.inputParameters[]? | {name, type: (.type // .typeSettings.type), optional}], functionInputs: ((.inputSchema.properties // {}) | keys), functionOutputs: ((.outputSchema.properties // {}) | keys), outputs: [.outputParameters[]? | {outputPath, semanticType}]}' enrichment-search-work-email-1.json
    ```
 
    The jq command is an optional compact-view convenience. If shell filtering
@@ -64,16 +104,27 @@ Prefer suitable Clay waterfalls over individual providers.
 
    Compare the output fields against each part of the request. Reuse the saved
    response for detailed inspection instead of repeating the same query.
-   Inspect candidate inputs, outputs, credentials and limits. Prefer a plan that
-   covers the request using available inputs, not merely the highest-ranked result.
+   Inspect candidate inputs, outputs, credentials and limits. Compare complete
+   plans, including steps to obtain missing inputs, rather than only actions that
+   accept the starting fields.
    Search order is the default preference among candidates with comparable fit.
    Use this order as a relevance signal, not proof of provider accuracy.
    Choose a lower-ranked candidate for a concrete advantage in required outputs,
-   input compatibility, evidence, freshness metadata, or coverage, and explain it.
+   evidence, freshness metadata, or coverage, and explain it.
    Match output semantics to the request: a title field alone does not establish
    current employment, and a location field must refer to the requested entity.
    For actions, use `clay workflows actions schema <packageId> <actionKey>` for more detail.
-   For workflow function (`type: "subworkflow"`) candidates, inspect the saved published `inputSchema` and `outputSchema`.
+   Inspect table functions with `clay functions get function:<functionId>`.
+   For workflow function (`type: "subworkflow"`) candidates, use the published `inputSchema`
+   and `outputSchema` already returned by search. For additional implementation context,
+   use `clay functions get workflow:<workflowId>` when available; it does not require routine registration.
+   Inspection is rolled out separately from search. If it returns `not_found`, continue using
+   the saved search candidate's published schemas and `workflowId`; do not retry inspection
+   or discard the candidate solely because inspection is unavailable. Node validation still
+   determines whether the function can be added.
+   `candidateId` is only a search identifier. The returned `schema` is implementation context:
+   table functions render their table columns/actions as text; workflow functions render the
+   published graph as JSON text. Do not pass the implementation text as a node-creation payload.
    Create a `subworkflow_call` node using the candidate’s `workflowId` as `subworkflowId`;
    wire upstream inputs with `inputSchema` sourceNodeId/sourcePath and map values with `inputMappingConfig`.
    Top-level `inputMappingConfig` currently supports only `subworkflow_call` nodes, not code or conditional nodes.

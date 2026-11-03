@@ -1,5 +1,11 @@
 # Testing Workflows
 
+For list-mode code tests, wrap the item: `--inputs '{"input":{"name":"Ada"}}'`.
+If `context.input` is missing, fix the test inputs.
+
+`clay workflows nodes test` runs list fan-out. Use `--source-run` to reuse upstream list
+data, `--inputs` for manual node-step inputs, or both to replace some of the source run's inputs.
+
 If `clay` isn't on PATH or `clay whoami` fails on auth, run the `setup` skill.
 
 Tests that create workflow runs use the workflow's run allowance. For a run-limit error,
@@ -25,9 +31,10 @@ clay workflows runs test <workflowId> --trigger <triggerId> --replay     # Find 
 clay workflows runs test <workflowId> --trigger <triggerId> --limit 5    # audience segment trigger: --limit or --record-ids required
 clay workflows runs list <workflowId>
 
-# Partial single-node test (exactly one of --source-run or --inputs); nothing downstream runs
+# Partial single-node test (--source-run, --inputs, or both); nothing downstream runs
 clay workflows nodes test <workflowId> <nodeId> --source-run <runId>
 clay workflows nodes test <workflowId> <nodeId> --inputs '{"param":"value"}'
+clay workflows nodes test <workflowId> <nodeId> --source-run <runId> --inputs '{"param":"value"}'  # replace one recorded input
 
 # Recover failed runs: restart each at its failed node and run the rest of the workflow
 clay workflows runs rerun <workflowId> <runId...> --dry-run
@@ -78,6 +85,9 @@ clay workflows runs rerun <workflowId> <runId...>
 or unexecuted node. Its current input mappings resolve against completed upstream steps in
 the source run; configure mappings first or run from the producer if its output is missing.
 An unfinished source step cannot be reused; use `--inputs` without `--source-run` instead.
+Adding `--inputs` to `--source-run` replaces the matching inputs the node recorded in that run
+and keeps the rest; a node that did not run in the source run has none to replace, so it takes
+one flag or the other.
 
 `--inputs`, `--audience-segment`, and `--trigger` cannot be combined. See `publishing.md`.
 
@@ -236,7 +246,7 @@ Use `clay workflows actions test` and `clay workflows code test` as documented i
 the parent skill. After wiring, confirm the persisted config with
 `clay workflows nodes get` or `graph get --mode full`.
 
-For code with declared outputs, test against the exact flat schema before wiring:
+For code with declared outputs, test against the schema you will save before wiring:
 
 If `clay workflows code test --help` does not list `--output-schema`, use `nodes test`
 after saving the node instead; an execution-only code test does not validate its output schema.
@@ -246,10 +256,12 @@ clay workflows code test --file handler.py --inputs sample.json --output-schema 
   | jq -e '.isError != true and .outputSchemaValidated == true'
 ```
 
-`outputs.json` contains the field map itself, for example
-`{"owner":{"type":"string","description":"Assigned owner"}}`, without an `outputSchema` wrapper.
-All declared fields are required and non-null. A successful Python return containing
-`{"owner":null}` therefore fails the schema test. Test representative missing-data and
+`outputs.json` contains the schema itself, without an `outputSchema` wrapper: either flat
+fields such as `{"owner":{"type":"string","description":"Assigned owner"}}`, or, when the installed
+CLI's `--output-schema` help mentions JSON Schema, the JSON Schema `nodes get` returns for an
+existing node, passed through unchanged (older CLIs take only the flat map). Flat fields
+are all required and non-null, so a successful Python return containing `{"owner":null}` fails
+the schema test. JSON Schema keeps its own `required` list. Run time enforces type, required, number `minimum`/`maximum`, and array `minItems`/`maxItems`; string `format`, `enum`, `pattern`, `minLength`, `maxLength` and `additionalProperties` are stored but not enforced. Test representative missing-data and
 non-qualifying inputs as well as the happy path. Choose the missing-value behavior deliberately;
 do not substitute zero or a placeholder owner just to pass validation. After saving or changing
 the schema, use `nodes test` to verify the persisted node and its mappings before a full run.

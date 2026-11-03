@@ -24,6 +24,13 @@ internally. Keep data credits, billable action executions, search-result quotas,
 inference dollars separate. Activity/tool-call counts are not evidence of billable Actions.
 Do not convert credits to dollars without an applicable rate returned by a tool.
 
+**Running a workflow does not require access to its budget.** `clay budgets list` returns only
+the budgets the user can assign, so the `budget.id` from `clay workflows get` can be missing from
+it. A missing budget is not a blocker. Run the workflow. Its spend still draws from that budget
+and stops if the budget's limit is reached. When the budget is listed, check its balance
+internally before a paid run, as for any other limit. When it is not listed, report a budget limit
+only if a run actually reaches it.
+
 **Only quote numbers supported by current, applicable tool results.** Catalog base prices
 are not configured-run prices. A routine's `estimatedCreditCost` can omit branching or
 fan-out; `containsVariablePricing: false` does not establish a complete total. Multiply a
@@ -81,7 +88,7 @@ trigger goes live over every record it finds, say that the test records run agai
 
 **Ask once per decision.** When the API holds a command for approval (`approval_required`),
 that approval is the question for that step, so do not ask about the step separately before
-or after it. Present it as the error says: in the GTM agent, raise its approval card; in a
+or after it. Present it as the error says: in the Clay agent, raise its approval card; in a
 standalone CLI session, ask the human about that request and run `clay approvals approve` or
 `deny` on their answer. A command held once in a session is held again, so when the rest is
 the same command as a test batch that was held, skip your own question: report the test

@@ -146,4 +146,6 @@ A paused sync stays paused. The edit takes effect once the user resumes it in th
    the 20 newest runs across all destinations, so a destination's latest run can be missing without
    the higher limit. If a destination has no run in the result, say so rather than guessing. Report
    each destination's latest run in plain words (status, match rate, and audience size), and link
-   the sync's `url`.
+   the sync's `url`. Google and Bing have no single audience size: report the size for each
+   network in the run's `google` or `bing` object. For a failed run, relay its `errorMessage`, which says what went wrong
+   and what the user can do about it.

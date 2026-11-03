@@ -1,6 +1,6 @@
 ---
 name: audiences
-description: Clay Audiences — the workspace's own people, companies, and deals (contacts, leads, accounts, customers). Use for any request about their records when no surface is named, including counts, fill rates, lookups ("how many people have a phone?"), saved segments, and field definitions. Also deal and pipeline questions like largest opportunities, biggest pipeline items, recent wins, closed-won, deal stage, and ACV.
+description: Clay Audiences — the workspace's own people, companies, and deals (contacts, leads, accounts, customers). Use for any request about their records when no surface is named, including counts, fill rates, lookups ("how many people have a phone?"), saved segments, and field definitions. Also deal and pipeline questions like largest opportunities, biggest pipeline items, recent wins, closed-won, deal stage, and ACV. Also the calls and meetings synced onto those records, such as Gong recordings.
 ---
 
 # Clay Audiences
@@ -283,6 +283,13 @@ clay audiences activities summary --segment-id audseg_abc --since 2026-08-01 --u
 - Common prompts: "show recent calls for this segment", "summarize email activity
   since last week", "which sources drove activity for this audience?", "sample the
   latest campaign activity before I run a workflow".
+
+Calls and meetings from Gong, calendars, and CRMs sync in as `call` and `meeting` activities on
+the companies and people involved. When the user asks about a call without naming a segment, such
+as a good Gong call to watch, read call activities over a segment that covers those records (find
+one with `clay audiences list --entity-type companies`), then pick by title and date. Activity
+rows carry no recording link: give the title, date, and account so the user can open it in Gong,
+and never construct a URL.
 
 ## Signals
 

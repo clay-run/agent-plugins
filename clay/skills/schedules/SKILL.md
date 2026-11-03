@@ -1,11 +1,11 @@
 ---
 name: schedules
-description: 'GTM Agent schedules — recurring prompts the GTM Agent runs on a cadence, each occurrence starting a fresh agent task. Use for any request to do something on a schedule or recurring cadence: a daily digest, a weekly report, checking or changing when a scheduled run happens next, pausing or deleting one.'
+description: 'Clay agent schedules — recurring prompts the Clay agent runs on a cadence, each occurrence starting a fresh agent task. Use for any request to do something on a schedule or recurring cadence: a daily digest, a weekly report, checking or changing when a scheduled run happens next, pausing or deleting one.'
 ---
 
-# GTM Agent schedules
+# Clay agent schedules
 
-A schedule runs the GTM Agent on a cadence. Each occurrence starts a **fresh
+A schedule runs the Clay agent on a cadence. Each occurrence starts a **fresh
 agent task** with the schedule's `prompt` as its first message, run as the
 schedule's creator. Nothing carries over between occurrences — no conversation,
 no working files — so a schedule prompt must stand alone: name the audience,
@@ -57,6 +57,9 @@ the cap is a smell that it has absorbed things that do not belong in it:
   or repeated spending approvals to the schedule prompt.
 - Contingency trees. A run that hits a blocker reports it and stops; the next
   occurrence retries. One line covers it.
+- Preconditions on budget access. A schedule that runs a workflow runs it; do not make
+  the run depend on finding the workflow's budget in `clay budgets list`. Budget limits
+  are enforced when the workflow spends (see `workflows-discover-actions/cost-and-budget.md`).
 - Report formatting specs. Say what facts the final reply must contain (the goal's
   current reading, what changed, what failed) and leave the prose to the run.
 
@@ -233,14 +236,14 @@ itself mean work happened.
   changes what it is doing — it takes effect from the next occurrence on. This
   is what lets a scheduled run adjust the schedule that started it.
 - **Delete removes the schedule's history with it.** Every run the schedule
-  produced, and the GTM Agent tasks those runs created, are deleted along with
+  produced, and the Clay agent tasks those runs created, are deleted along with
   the schedule; nothing here undoes it. Confirm with the user before deleting a
   schedule that has run (`hasRun` true) — set `"status": "completed"` instead
   when the runs should stay readable. Delete is a `conflict` while a task is
   _executing_, since that agent is mid-turn; a task merely waiting on the user
   is deleted along with the schedule and its question is dropped. Not
   idempotent — a second delete of the same id is `not_found`.
-- **Runs are gated at fire time.** An occurrence runs only if the GTM Agent is
+- **Runs are gated at fire time.** An occurrence runs only if the Clay agent is
   still enabled for the workspace and the creator is still a workspace editor;
   otherwise it is skipped, not queued. A creator who has left the workspace, or
   whose account is gone, also retires the schedule: the occurrence is skipped
@@ -261,7 +264,7 @@ conflict, `2` validation, `3` auth, `4` rate-limit, `5` network, `6` not-found.
   any command — the moment between the scheduler reserving an occurrence and
   starting it. The second is two statements wide; retry rather than reporting
   it as a limitation.
-- `6` on `list` usually means the GTM Agent is not enabled for the workspace;
+- `6` on `list` usually means the Clay agent is not enabled for the workspace;
   on `update`/`delete` it usually means the id belongs to another user's or a
   deleted schedule.
 

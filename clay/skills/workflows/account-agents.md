@@ -1,6 +1,6 @@
 # Account agent nodes
 
-Some workspaces have **account agents** — Claygents whose model and input variables are managed by the platform. Their prompt and output tasks can be updated from either the account agent builder or the workflow editor. An agent node running one shows `agentType: "account"` on a node read (`clay workflows nodes get`; Sculptor: `read`); regular agent nodes show `agentType: null`.
+Some workspaces have **account agents** — Claygents whose model and input variables are managed by the platform. Their prompt and output tasks can be updated from either the account agent builder or the workflow editor. An agent node running one shows `agentType: "account"` on a node read (`clay workflows nodes get`; Sculptor: `read`); regular agent nodes have no `agentType`.
 
 ## When to use an account agent
 
@@ -56,6 +56,13 @@ On a node already linked to an account agent, update `agentPrompt` or `outputSch
 `outputSchema` is the account agent's task list and **replaces it in full**: send every field the agent should end up with — change descriptions to refine a task, add fields to add tasks, and omit fields to remove tasks. Before omitting an existing field, do a full workflow read and rewire any downstream nodes whose `inputSchema`/`sourcePath` references it — validation does not check that referenced output paths still exist, so a dangling reference passes validation and resolves to nothing at run time. At least one field must remain, and every changed or added field needs a non-empty description focused on the requested output. **Preserve existing field ids verbatim** — renaming one changes the runtime output key and breaks downstream references. New ids must avoid the runtime-reserved output names (`confidence`, `reasoning`, `evidence`, `evidenceIds`, `hydratedEvidence`, `response`, and similar internal outputs) — a rejected save names the offending field. A `select` field also needs `options` containing a JSON-encoded, non-empty array of objects with non-empty `text` values, such as `"[{\"text\":\"Qualified\"},{\"text\":\"Not qualified\"}]"`. A schema that saves but cannot execute fails at run time with the runtime's own error, which the workflow UI surfaces.
 
 If the account agent is also managed from an Audiences page, your edit does not touch that original: it lands on a new copy named `[Workflows] <original name>` and the node is re-linked to the copy automatically — mention the new agent name to the user so they can find it in the agent list. A workflow-owned (config-less) account agent is edited in place; if it is linked from other workflows, those nodes see the change too. If the account agent uses connected accounts/private tool credentials, the edit is rejected — workflow edits carry no user session to authorize those credentials; tell the user to make the change in the account agent builder instead.
+
+## Web search
+
+Account agents do not search the web unless web search is turned on in the account agent
+builder. The node's `agentInternetSearchEnabled` shows the current setting; it cannot be
+changed from a workflow, so tell the user to change it in the builder when the task needs
+the opposite.
 
 ## Do not edit or disclose its model or input variables
 

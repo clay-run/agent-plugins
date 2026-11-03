@@ -61,7 +61,7 @@ Start from the most specific hub that matches the question:
    grep a raw fetch instead: `curl -sL <sitemap-url> | grep -i <keyword>`. Skip `/fr/`
    entries — they are French duplicates.
 4. When hub navigation dead-ends or a page you expected is missing, use web search
-   scoped to the docs (`site:university.clay.com` or `site:clay.com`) to locate a page,
+   scoped to the docs (`site:university.clay.com` or `site:www.clay.com`) to locate a page,
    then fetch it. Never answer from a search snippet alone.
 
 If your environment has no web fetch tool, fetch with `curl -sL <url>` instead. If you

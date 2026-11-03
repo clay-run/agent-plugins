@@ -57,6 +57,9 @@ Company syncs, where the first three keys are required:
 }
 ```
 
+`COUNTRY` should map a field of two-letter ISO country codes. A field of full country names also
+works: Clay converts names on a best-effort basis, and a value it cannot convert is not sent.
+
 `GENDER`, `ZIP_CODE`, and `MOBILE_ADVERTISER_ID` have no default. Map them only to a field the user
 confirms.
 
