@@ -18,9 +18,11 @@ publishing, testing, and presentation rules.
 - To reuse a regular Claygent, find it with `clay claygents list --search <text>` and read it
   with `clay claygents get <id>` to check its inputs, outputs, and tools. Then set only
   `agentClaygentId` on the node. Do not also send its name, prompt, model, or outputs.
-- To create one, send `agentName`, `agentPrompt`, and `agentModel` together in the agent
-  node's first `clay workflows nodes create` call. Use the user's requested model when it is
-  available; do not silently substitute a different model.
+- To create one, send `agentName` and `agentPrompt` together in the agent node's first
+  `clay workflows nodes create` call. Omit `agentModel` to use the workspace default (Auto
+  where enabled). Set `agentModel` only when the user requests a specific model, and do not
+  silently substitute a different model. When editing an existing node, omit `agentModel`
+  unless the user asks to change it so the saved model is preserved.
 - Put every prompt variable in top-level `inputSchema.properties`. Wire upstream values with
   `sourceNodeId` and `sourcePath`, then use the property name as `{{variable}}` in the prompt.
 - Set `outputSchema` to a flat field map with a useful description on every field. A

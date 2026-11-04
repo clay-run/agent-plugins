@@ -78,9 +78,9 @@ Common node types (not just agent/tool — pick the type that fits the step):
 - **Claygent (agent) nodes** (`nodeType: "agent"`) — LLM loops with prompts (reasoning,
   drafting, summarizing, classifying). Read and follow the complete `/workflows-claygent`
   skill before creating, editing, or running one.
-  - **Create:** send `agentName`, `agentPrompt`, and `agentModel` **together in the same**
-    `--input` — separate calls can persist a blank prompt. Prefer `gpt-5.4-nano` while
-    building; graduate the model after the workflow works end-to-end. One exception: a node
+  - **Create:** send `agentName` and `agentPrompt` **together in the same** `--input` —
+    separate calls can persist a blank prompt. Omit `agentModel` to use the workspace default
+    (Auto where enabled), or set it to the specific model the user requests. One exception: a node
     you are about to make an account agent is created bare — see account agents below.
   - **Reuse:** `clay claygents list --search <text>` (read one with `clay claygents get <id>`),
     then send only `agentClaygentId` (the returned `id`). Do not send `agentName` / prompt / model — `agentName` can rewrite that

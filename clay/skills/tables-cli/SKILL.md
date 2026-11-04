@@ -34,8 +34,10 @@ Prefer `columns list|get` / `get` / `rows list|get` / `query-live` for everyday 
 `rows` are command groups — `clay tables columns <tableId>` is not a command.)
 
 **Availability:** `clay tables query` requires **API table sync** (Enterprise).
-Without sync, `clay tables query` and `clay tables update --query-enabled true`
-fail with `auth_forbidden` ("API table sync is not enabled for this workspace") —
+Without sync, `clay tables query` fails with `auth_forbidden` and
+`clay tables update --query-enabled true` with `plan_upgrade_required` (older CLI
+versions report `auth_forbidden`), both saying "API table sync is not enabled for
+this workspace" —
 that's an account limitation, not a bug: don't retry or re-login. Fall back to
 `columns` / `rows` / `query-live` (no sync required), and tell the user to contact
 Clay about Enterprise access for synced `query`.

@@ -53,6 +53,27 @@ Whatever you're doing in Clay, work transparently so the user can follow along:
   returns `not_found` or `auth_forbidden`, do not retry through another path. If context is empty
   or unavailable, use what the user supplied and ask for missing criteria when needed.
 
+- **Review Knowledge Hub proposals before deciding.** Workspace admins can use
+  `clay knowledge-hub business-context propose`, then `suggestions list` and
+  `suggestions get <id>` under the same business-context group. Render `changes[]`
+  conversationally; show `.patch` only for literal-diff requests or plain terminals.
+  Refer to suggestions by title; IDs and revisions are for commands, not for display.
+  Offer the review. In an external terminal, wait for an explicit accept or reject decision,
+  then execute it without a second approval request. In managed Clay sessions requiring
+  approval, use the approval request as the single confirmation instead of asking for a
+  separate chat decision. If managed permissions allow immediate execution, wait for an
+  explicit chat decision first. Requesting a
+  proposal does not authorize acceptance. Use `suggestions accept <id> --review-revision <rev>`
+  with the exact revision the user reviewed, or `suggestions reject <id> --reason "..."`.
+  If acceptance conflicts, review again and obtain a fresh decision. A stale proposal
+  requires a new proposal. To revise, propose a replacement and reject the old one.
+  New proposals require fewer than 5 open suggestions in the workspace. At the limit,
+  help the user review and accept or reject existing suggestions before proposing another;
+  never dismiss suggestions without their decision. Retrying the same proposal is allowed.
+  Follow `nextStep` on proposal retries: report an already-decided result without
+  offering it for review. Stop on `auth_forbidden`; workspace admin rights are required
+  for proposing and deciding. Do not report changes as applied until acceptance succeeds.
+
 ## CLI readiness in external agents
 
 Before the first CLI task in Claude Code, Codex, Cursor, or Cowork, follow any

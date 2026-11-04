@@ -61,6 +61,19 @@ transform stdin without opening files. Semicolon chaining (`;`) is narrower: eac
 clause must be `clay`, or a literal `echo` / `printf` (not `cat` / `jq` / …). Anything
 else falls through to a prompt.
 
+## When a command needs approval
+
+Some commands that delete, send or run things at scale can answer `approval_required`
+instead of running. Nothing has happened yet: tell the user what the request would do (from
+the error's `details`) and let them decide. `clay approvals approve <requestId>` runs it and
+`clay approvals deny <requestId>` drops it. Inside a managed Clay session the person decides in
+Clay instead, and the `clay approvals` commands are unavailable.
+
+When `clay approvals get <requestId>` shows an `offeredRule`, `clay approvals approve <requestId>
+--always-allow` also saves it, so the user's later CLI calls for that action run without asking.
+Only add `--always-allow` when the user asks for it. `clay approvals rules list` shows their saved
+rules and `clay approvals rules delete <ruleId>` removes one.
+
 ## When to use the CLI vs the Public API
 
 Use the CLI for scripting and agent-driven tasks in a shell. To build a service, app,
