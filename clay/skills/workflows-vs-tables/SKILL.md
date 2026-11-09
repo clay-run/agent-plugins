@@ -5,6 +5,8 @@ description: Clay Workflows vs Tables — conceptual explainer for a customer as
 
 # Clay Workflows vs. Clay Tables
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Customers sometimes ask what the difference is between Clay Tables and Clay Workflows, or which
 one fits their use case. Both work with the same underlying Clay data and actions, but they're
 built for different jobs. Answer in plain language — don't just paste this file at the customer.

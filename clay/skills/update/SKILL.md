@@ -6,6 +6,8 @@ allowed-tools: Bash, Read
 
 # Keeping Clay up to date
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 The CLI is installed independently. The plugin declares its minimum compatible CLI
 in `cli-min-version`; a newer CLI is fine. Updating one does not automatically update
 the other.
@@ -14,7 +16,7 @@ the other.
 
 Run `bash "<PLUGIN_ROOT>/scripts/check-cli.sh" plain`, resolving `<PLUGIN_ROOT>` two
 levels above this skill. If it reports a missing, old, or plugin-managed executable,
-follow the `setup` skill to locate the executable and choose the appropriate action:
+follow the `cli-setup` skill to locate the executable and choose the appropriate action:
 existing native CLIs upgrade through their own `clay update`, npm CLIs through npm,
 and missing or plugin-managed CLIs use installation or migration. An old plugin forwarder needs
 migration even when a cached launcher still responds. Preserve the installation method
@@ -69,7 +71,7 @@ Cursor is UI-driven — tell the user to do this (there's no reliable CLI path):
 
 After refreshing the plugin, read its new `cli-min-version` and run its
 `scripts/check-cli.sh` again. If the minimum increased, run the current plugin's
-`setup` skill. Confirm `clay --version` is at least that minimum. Only investigate
+`cli-setup` skill. Confirm `clay --version` is at least that minimum. Only investigate
 sign-in if an authenticated command reports an auth error; an update does not require
 another login.
 

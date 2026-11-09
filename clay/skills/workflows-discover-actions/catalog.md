@@ -1,7 +1,7 @@
 # Discovering Clay actions
 
 This skill helps you find available Clay actions for use in Clay workflow nodes,
-via the `clay` CLI. If `clay` isn't on PATH, run the `setup` skill.
+via the `clay` CLI. For tool access or authentication problems, read the `clay` entry skill before continuing.
 
 Not to be confused with `clay routines` — that lists saved function/workflow
 routines in the workspace, a different concept from workflow actions. For
@@ -44,6 +44,11 @@ Each catalog entry has:
   be bound. Present only when the action needs an API key and no usable configured tool exists
 - `priorityTier` — lower is better (0 = functions, 1 = Clay first-party, 2 = has app account, 3 = Clay credits, 4 = requires key)
 - `packageDisplayName` — human-readable provider name (e.g. "Salesforce"); **absent on workspace-function entries** (`priorityTier: 0`), so guard for it in jq (`.packageDisplayName // ""`)
+- `enabled: false`, `unavailableReason`, `unavailableMessage` — present only on actions the
+  workspace can't use yet, listed after every usable action. `unavailableReason` is
+  `plan_upgrade_required`: a workspace admin must upgrade the plan. Don't add these
+  actions to a node. Tell the user the capability exists and relay `unavailableMessage`, rather
+  than reporting that Clay can't do it
 - `actionLabels.type` — the action's capability type (e.g. `"Send Data"`); can be a single string **or an array of strings**, so match with both shapes in mind
 
 The catalog has no input field names. **Before wiring any input, fetch the real
@@ -86,8 +91,7 @@ Never load the full `clay workflows actions list` output into context; it can be
 Save it to a file or filter with `jq`, returning only relevant actions and fields.
 Do not read the entire saved catalog.
 
-Fetch the catalog with the command below. If it fails (e.g. missing
-credentials), run the `setup` skill first.
+Fetch the catalog with the command below. For tool access or authentication problems, read the `clay` entry skill before continuing.
 
 ```bash
 clay workflows actions list > /tmp/clay-actions-catalog.json
@@ -101,10 +105,17 @@ filter structurally with jq:
 
 ```bash
 grep -i "email" /tmp/clay-actions-catalog.json
-jq -r '.data[] | select(.name | test("email";"i")) | "\(.priorityTier) \(.packageId) \(.actionKey) — \(.displayName)"' /tmp/clay-actions-catalog.json | sort
+jq -r '.data[] | select(.enabled != false) | select(.name | test("email";"i")) | "\(.priorityTier) \(.packageId) \(.actionKey) — \(.displayName)"' /tmp/clay-actions-catalog.json | sort
+jq -r '.data[] | select(.enabled == false) | select(.name | test("email";"i")) | "\(.packageId) \(.actionKey) — \(.displayName) [unavailable: \(.unavailableReason)]"' /tmp/clay-actions-catalog.json
 ```
 
-Prefer actions with lower `priorityTier` values and existing `configuredTools` — an action that
+`grep` matches every entry, including actions this workspace can't use yet. The first jq command
+lists only usable actions; pick from those. The second jq command lists matching actions the
+workspace can't use yet, so you can tell the user they exist (see `enabled` above).
+
+Choose only among usable actions (`enabled` absent or `true`). `priorityTier` ranks an
+unavailable action at its normal tier (HTTP API is tier 1), so a low tier does not mean you can
+use it. Among usable actions, prefer lower `priorityTier` values and existing `configuredTools` — an action that
 already has a configured tool usually has working credentials, which the new tool inherits. Skip
 configured tools whose `appAccountAbilities.canAccess` is `false`: `priorityTier` does not account
 for your access, so a tier-2 entry can still be one you are not allowed to bind.
@@ -123,7 +134,7 @@ a naive keyword grep misses them. Search two ways before concluding anything:
    entries** — guard it with `// ""` or the `test()` call throws on the first
    function and aborts before printing any real matches):
    ```bash
-   jq -r '.data[] | select((.packageDisplayName // "") | test("salesforce";"i")) | "\(.packageId) \(.actionKey) — \(.displayName) [\(.actionLabels.type // "")]"' /tmp/clay-actions-catalog.json | sort
+   jq -r '.data[] | select((.packageDisplayName // "") | test("salesforce";"i")) | "\(.packageId) \(.actionKey) — \(.displayName) [\(.actionLabels.type // "")]\(if .enabled == false then " [unavailable: \(.unavailableReason)]" else "" end)"' /tmp/clay-actions-catalog.json | sort
    ```
 2. **By capability** (see the write-action note below).
 
@@ -146,7 +157,7 @@ spot them; each provider names its write actions differently (e.g. Salesforce's
 action available in the workspace with:
 
 ```bash
-jq -r '.data[] | select(([.actionLabels.type] | flatten | index("Send Data"))) | "\(.packageDisplayName // ""): \(.actionKey) — \(.displayName)"' /tmp/clay-actions-catalog.json | sort
+jq -r '.data[] | select(([.actionLabels.type] | flatten | index("Send Data"))) | "\(.packageDisplayName // ""): \(.actionKey) — \(.displayName)\(if .enabled == false then " [unavailable: \(.unavailableReason)]" else "" end)"' /tmp/clay-actions-catalog.json | sort
 ```
 
 For Salesforce specifically the package is "Salesforce" and the write actions are
@@ -222,8 +233,7 @@ An enrich
 ("Output
 structure of enrich (tool) nodes") for the full addressing rules. `outputParameters`
 comes back empty for actions that declare no output schema; in that case, run the
-action once and read the paths off its result — `clay workflows actions test` (Sculptor:
-`execute_clay_action`).
+action once and read the paths off its result — `clay workflows actions test`.
 
 ## Dynamic (input-dependent) fields
 

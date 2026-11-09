@@ -5,6 +5,8 @@ description: 'Clay agent schedules — recurring prompts the Clay agent runs on 
 
 # Clay agent schedules
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 A schedule runs the Clay agent on a cadence. Each occurrence starts a **fresh
 agent task** with the schedule's `prompt` as its first message, run as the
 schedule's creator. Nothing carries over between occurrences — no conversation,

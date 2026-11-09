@@ -6,6 +6,8 @@ allowed-tools: Bash(clay *), Bash(jq *), Bash(grep *), Read, Grep
 
 # Clay search
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Search Clay's GTM database with advanced queries and return matching records — people or
 companies.
 
@@ -53,7 +55,7 @@ filters on those (`jobs.exists(...)`, `company.jobs.any(...)`). Workspace audien
 references are covered in the Audiences section below.
 
 Run `clay searches --help` (and `clay searches <cmd> --help`) for flags and output shapes.
-If `clay` isn't on PATH or `clay whoami` fails on auth, run the `setup` skill.
+For tool access or authentication problems, read the `clay` entry skill before continuing.
 
 ## Audiences
 

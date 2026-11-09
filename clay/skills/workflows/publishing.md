@@ -32,7 +32,7 @@ of a live trigger.
 | Concept                    | Meaning                                                                                                                                                             |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Draft**                  | The current editable graph (nodes, edges, prompts, tools). A never-published workflow is still a first draft.                                                       |
-| **Draft-history snapshot** | An automatic freeze of the graph (after a graph-mutating CLI edit, at run start). Undo/history only — not a release. See `/workflows-snapshots`.                    |
+| **Draft-history snapshot** | An automatic freeze of the graph (after a graph-mutating edit, at run start). Undo/history only — not a release. See `/workflows-snapshots`.                        |
 | **Publish**                | Ship the current draft as a numbered live version, activating its triggers. A trigger the user paused in the UI stays paused (publish does not silently resume it). |
 | **Live**                   | The published version automation runs. After the first publish, further draft edits do **not** change live automation until the user publishes again.               |
 

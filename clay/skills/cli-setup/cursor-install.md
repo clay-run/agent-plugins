@@ -142,12 +142,12 @@ entirely unless the policy read above (or the plugin-log fallback) showed local 
 allowed — running the copy anyway when it's blocked just leaves a dead, never-loading entry under
 `~/.cursor/plugins/local/clay` for the user to find and be confused by. If allowed, copy this same
 plugin's files into Cursor's local-plugin directory. Resolve the plugin root as two levels up
-from the setup skill's own directory (`.../clay/skills/setup` — the same directory that holds
+from the CLI setup skill's own directory (`.../clay/skills/cli-setup` — the same directory that holds
 this `cursor-install.md` and `SKILL.md`):
 
 ```bash
-# Replace <THIS_SKILL_DIR> with the setup skill's directory (the one containing this
-# cursor-install.md and SKILL.md, e.g. .../clay/skills/setup):
+# Replace <THIS_SKILL_DIR> with the CLI setup skill's directory (the one containing this
+# cursor-install.md and SKILL.md, e.g. .../clay/skills/cli-setup):
 plugin_root="$(cd "<THIS_SKILL_DIR>/../.." && pwd -P)"
 # A bad <THIS_SKILL_DIR> substitution must stop here, before the rm -rf below can
 # destroy an existing install: empty means the cd failed, and the manifest check
@@ -172,36 +172,8 @@ tell the user an admin has to unblock `allowUserLocalPluginImports` or
 
 ## Clean up after an earlier run
 
-Whichever path ends up active, clear out what earlier runs of this skill left behind so
-re-running converges instead of piling up dead entries. Always run this, on every path:
-
-```bash
-mcp_json="$HOME/.cursor/mcp.json"
-if [ -f "$mcp_json" ]; then
-  if command -v jq >/dev/null 2>&1; then
-    tmp="$(mktemp)"
-    if jq 'del(.mcpServers.clay)' "$mcp_json" > "$tmp"; then
-      mv "$tmp" "$mcp_json"
-    else
-      rm -f "$tmp"
-    fi
-  else
-    python3 - "$mcp_json" <<'PY'
-import json, sys
-path = sys.argv[1]
-try:
-  with open(path) as f:
-      config = json.load(f)
-except (FileNotFoundError, json.JSONDecodeError):
-  sys.exit(0)
-config.get("mcpServers", {}).pop("clay", None)
-with open(path, "w") as f:
-  json.dump(config, f, indent=2)
-  f.write("\n")
-PY
-  fi
-fi
-```
+Preserve existing connector configuration when installing or repairing the CLI.
+A connector with the same product name is not evidence of a stale installation.
 
 Earlier setup runs may have left a permanent plugin copy at `~/.config/clay-plugin/clay`.
 Leave it in place until `SKILL.md` step 3 has migrated and verified the independent CLI;

@@ -61,8 +61,7 @@ Both schemas accept the flat shorthand (dropping the `type: "object"` + `propert
 wrapper) and the full JSON Schema form. The write side accepts exactly what the read side
 returns: for every node without a Claygent (code, conditional, terminal, ...), `nodes get`
 returns `outputSchema` as JSON Schema, and that value can be sent back unchanged through
-`nodes update` or `edit_node`. `code test --output-schema` takes it too when the installed CLI's
-`--help` mentions JSON Schema; older CLIs take only the flat map. Flat fields are all required;
+`nodes update`, `edit_node`, or `code test --output-schema`. Flat fields are all required;
 JSON Schema keeps its own `required` list. Agent nodes read and write flat fields only.
 Workflow function calls are the exception: their `outputSchema` comes from the published
 function and any `outputSchema` edit is rejected.
@@ -74,8 +73,8 @@ Input/trigger JSON Schema describes an email as `{"type":"string","format":"emai
 `{"type":"email"}` is only a flat output-field type. Nullable type unions such as
 `["string","null"]` are unsupported. Every flat output field becomes required;
 `required:false` does not make it optional, and `null` is not a string. For code, use
-`code test --output-schema` with the schema you will save (flat fields, or the JSON Schema from
-`nodes get` when the installed CLI's help mentions it) and representative missing-data inputs before saving if the installed CLI offers the flag (`clay workflows code test --help`).
+`code test --output-schema` with the schema you will save (flat fields or the JSON Schema from
+`nodes get`) and representative missing-data inputs before saving if the installed CLI offers the flag (`clay workflows code test --help`).
 Otherwise, test the saved node with `nodes test`; an execution-only code test does not validate
 the schema. Use `nodes test` to check the saved schema and mappings in either case.
 
@@ -125,11 +124,49 @@ Each value is one of:
 | `map`              | `{ "type": "map", "entries": { "<key>": { "type": "static", "value": … } } }`                 | object-valued parameter (e.g. HTTP headers, a key→value map); each entry is its own `static` or `reference` mapping    |
 
 **Object literals need `map`.** A `static` value only accepts a string, number,
-boolean, or array of strings — passing an object literal (or a stringified one) is
+boolean, array of strings, or `null` — passing an object literal (or a stringified one) is
 rejected or mis-parsed. To build an object value key by key, use the `map` type
 with one entry per key. To pass an object an upstream node already produced, keep a
 single-expression `reference` (`{ "type": "reference", "expression": "{{headers}}" }`) —
 it is type-preserving and passes the whole object, including dynamic keys.
+
+### Clearing a field in a destination
+
+- To clear a field, map its parameter to `{ "type": "static", "value": null }`. To clear only
+  when no branch produced a value, end a `coalesce` with a static `null` candidate: it stops
+  there and sends `null`.
+- Leaving a parameter unmapped, or mapping it to `skip`, does not clear it. It is not a
+  guarantee the field is left alone either: a same-named upstream value can still be passed, and
+  `automap_inputs` can fill it.
+- Use `null` to clear (HubSpot is the exception, below), never a placeholder such as
+  `"Unassigned"`, `"N/A"`, `"null"` or `0`. How an empty string `""` is treated differs by action.
+- Set the action's "Ignore blank values" input (`removeNullValues` or `removeBlankValues`) to
+  the static value `false` in the same mapping. When it is `true`, the action drops the `null`.
+- Salesforce Update record clears a field sent as `null` with that input `false`. For Marketo
+  and Airtable updates, the `null` reaches the provider; read the record back to confirm it
+  cleared.
+- HubSpot clears a property with an empty string, not `null`. Map the property to a static `""`
+  and set `removeBlankValues` to `false`. A `coalesce` skips a `""` candidate, so HubSpot has no
+  clear-only-when-empty fallback: to clear conditionally, map the property straight to an upstream
+  value that is `""` when it should clear. A required parameter mapped to `""` fails the step.
+  Nodes you create have AI input mapping off, so the `""` is sent. An older node may have it on,
+  which you cannot see or change, and then the `""` can be filled in instead. Read the record
+  back, and if the property did not clear, write it from a node you create.
+- These actions drop blank values with no way to turn it off, so they cannot clear a field
+  from a workflow: Dynamics 365, Attio, Close, Google Sheets update row, Coda, Airtable create
+  and upsert, Marketo create, ActiveCampaign, and Notion database updates (which also skip `0`
+  and a boolean `false`). Tell the user the field was not cleared instead of reporting
+  success.
+- For Write to Audiences, each selected field must come from an upstream value, so a bare static
+  `null` fails graph validation. With the field's write mode set to
+  `always_write_including_blanks`, it is cleared when that upstream value is empty, for example
+  a `coalesce` of the reference followed by a static `null`. To clear it unconditionally, the
+  upstream node has to output an empty value for it. Whether the clear beats values that other
+  sources (another node or workflow, an import, a CRM sync) wrote earlier depends on whether
+  explicit Audiences clears are turned on for the workspace. When they are, the clear wins over
+  every earlier value and only a later write fills the field again. When they are not, an
+  earlier value from another source still wins.
+- A write that reports success does not prove the field cleared. Read the record back.
 
 ### Coalesce mappings on tool nodes
 
@@ -153,8 +190,9 @@ one `reference` candidate per branch, in the intended priority order:
 ```
 
 Candidates are ordered fallbacks. Resolution moves to the next candidate only
-when the previous value is `null`, `undefined`, or an empty string; `false`,
-`0`, empty arrays, and empty objects are values and do not fall through. A
+when the previous candidate resolves to `null`, `undefined`, or an empty string;
+`false`, `0`, empty arrays, and empty objects are values and do not fall through.
+A static `null` candidate stops resolution and sends `null`, so put it last. A
 candidate can be only `reference` or `static`; do not nest `coalesce`, `map`,
 `item`, `skip`, or LLM mappings inside it.
 
@@ -274,7 +312,7 @@ output declaration or candidate mappings until the validation passes.
 
 For each upstream `{{variable}}` in a reference candidate, add a
 `sourceBindings` entry keyed by that exact variable name. Its value contains
-the `sourceNodeId` and `sourcePath`. Sculptor converts these bindings into the
+the `sourceNodeId` and `sourcePath`. The node update converts these bindings into the
 merge node's internal `inputRefs`; without a binding, the expression is treated
 as a workflow-context variable instead of a reference to the named node output.
 
@@ -368,6 +406,24 @@ while `parent_companies[0].name` describes one element's name.
 `{ "result": { "name": "Acme", "domain": "acme.com" } }`, the correct paths are `$.result.name`
 and `$.result.domain`.
 
+### Output structure of message nodes
+
+A Message node's outputs are under `result`: `$.result.subject` (only when the message has a
+subject), `$.result.bodyMarkdown`, `$.result.bodyHtml` and `$.result.bodyPlainText`. Wire the
+format the destination takes: HTML for an email body, plain text for a LinkedIn note or SMS, and
+Markdown for another AI step. The node's `recentOutputPaths` lists them before it has run.
+
+```json
+{ "sourceNodeId": "wfn_intro_email", "sourcePath": "$.result.bodyHtml" }
+```
+
+### Output structure of rep task nodes
+
+A rep task node's outputs are under `result`: `$.result.taskId`, `$.result.status`,
+`$.result.created` (false when an earlier attempt of the same step already created the task),
+`$.result.assigneeUserId` and `$.result.dueAt` (only when the task has a due date). The node's
+`recentOutputPaths` lists them before it has run.
+
 ## Discovering an action's dynamic fields
 
 Some actions only reveal their real parameters once an earlier input is chosen —
@@ -409,12 +465,55 @@ clay workflows actions dynamic-fields pkg_abc123 hubspot-create-object fields --
   with `clay app-accounts list --filter type=<appAccountType>` when the provider's
   connection type is known. Pass the chosen account's `id` as `--account`.
 
+## Method 3: Inputs and outputs on code nodes
+
+A code node pins its inputs the same way as Method 1: put `sourceNodeId` + `sourcePath` on each
+`inputSchema` property, then read it in the handler with `context.get_input("<name>")`. Input
+types can be `string`, `number`, `boolean`, `array` or `object`, and `"$"` selects a node's whole
+output.
+
+```json
+{
+  "inputSchema": {
+    "company_domain": {
+      "type": "string",
+      "sourceNodeId": "wfn_lookup_company",
+      "sourcePath": "$.result.domain"
+    },
+    "email_check": {
+      "type": "object",
+      "sourceNodeId": "wfn_verify_email",
+      "sourcePath": "$.result"
+    }
+  }
+}
+```
+
+`sourceNodeId` can be any node upstream of the code node, not just the one directly before it.
+Reference a value from the node that produced it instead of copying it forward through every node
+in between.
+
+**Don't thread a state object through a chain of code nodes.** Avoid having each code node take
+an accumulated object from the previous one, change it and pass the whole thing on. Every step
+stores its full inputs and outputs, so the object is copied into each step it passes through, and
+those copies grow as it accumulates data. Parsing and re-serializing it on every step also eats
+into the code node's 1-second limit. Instead:
+
+- Give each code node a declared `outputSchema` with named fields for what it found or decided,
+  not one serialized JSON string. Use the JSON Schema form for `array` and `object` outputs.
+- Have each node pin only the upstream fields it reads, from the nodes that produced them.
+- When the workflow needs one combined result (a summary, a record to write, an audit trail),
+  build it once in a final code node that references the stage outputs it combines.
+- Keep a running value, like a count or budget, as a small output of its own that the next stage
+  references and updates, rather than a field inside a shared blob.
+
 ## Choosing a method
 
 | Scenario                                             | Method                                                                                                                                                  |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Numeric scores, IDs, booleans into an **agent** node | Pinned inputs (`sourceNodeId`/`sourcePath`)                                                                                                             |
 | Data from 2+ hops back into an **agent** node        | Pinned inputs                                                                                                                                           |
+| Any input into a **code** node                       | Pinned inputs on `inputSchema` (Method 3), from the node that produced the value                                                                        |
 | Any input into a **tool** node                       | `inputMappingConfig` (`static` / `reference`)                                                                                                           |
 | An input into a **repeating (list mode) tool** node  | Enable `listMode: true` + `listEntriesRef` on the node first (parent skill), then `inputMappingConfig` `item` (`{ "type": "item", "path": "$.field" }`) |
 | An input into a **repeating (list mode) agent** node | `{{__item}}` / `{{__item.field}}` in the prompt                                                                                                         |

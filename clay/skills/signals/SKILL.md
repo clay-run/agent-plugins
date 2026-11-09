@@ -5,6 +5,8 @@ description: 'Clay Signals — watches that detect real-world changes (job chang
 
 # Clay Signals
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 A signal watches a set of records and emits an **event** when something changes
 in the real world — someone changes job, a company posts a role or raises a
 round. It has two halves, and telling them apart is the first thing to get right.
@@ -58,6 +60,10 @@ shapes; they are the contract.
 confirming call is needed. They write nothing but the status: schedule, filter,
 and destination are untouched, and setting a status a signal already has changes
 nothing, so a retry after a network failure is safe.
+
+**`create`, `update`, `pause`, and `resume` may answer `approval_required`.** Present the
+request for the user's decision rather than retrying; approving applies it. A held
+table-watching `create` has already made its destination table, so rerunning it makes another.
 
 **Only an Active or Paused signal can be toggled.** Any other `runStatus` —
 `Errored`, `Disabled`, `Testing`, `Preview` — is refused.
@@ -289,7 +295,7 @@ records **by** their signal events — "companies with a job posting in the last
 30 days" is an audience filter, not a signals command.
 
 To read the captured events for one person or company, use the Audiences
-`signals get` command with `--entity-id`. For a saved segment, use `signals get`
+`signals list` command with `--entity-id`. For a saved segment, use `signals list`
 with `--segment-id`; to aggregate that segment by signal id and type, use
 `signals summary`. These are separate from `clay signals`, which manages the
 signal definitions and run status. The segment commands accept `--signal-ids`
@@ -440,8 +446,8 @@ existing signal's output, not a new signal:
    records already answers the question, and a second one would double the spend.
 2. **If a fitting signal exists, read its output rather than creating another.**
    For a table-based signal, read `destinationTable.id` with the `/tables` skill. For an
-   audiences-based signal, use `clay audiences signals get --entity-id` when
-   one person or company is in scope, `clay audiences signals get --segment-id`
+   audiences-based signal, use `clay audiences signals list --entity-id` when
+   one person or company is in scope, `clay audiences signals list --segment-id`
    for full event payloads across a saved segment, or `signals summary` for
    counts within a saved segment. The segment commands can filter
    with the underlying `signal.id` (`sig_…`) when the user means one particular
@@ -561,8 +567,7 @@ check whether the caveats elsewhere in this file still hold.
 
 - **Not every type can be created yet.** `clay signals create --help` lists the ones that
   can; `Custom` and web intent are app-only for now, and `create` refuses them by name. This
-  set grows, so read the help rather than a remembered list. No MCP tool covers signals
-  either. `LinkedinPostMentions` is no longer available — see **Signal types**.
+  set grows, so read the help rather than a remembered list. `LinkedinPostMentions` is no longer available — see **Signal types**.
 - **`update` is narrower than `create`, per type.** Name, schedule, and filter are always
   editable; everything else depends on the type, and a watched table, view, or identifier
   field is fixed for all of them.

@@ -6,7 +6,7 @@ If `context.input` is missing, fix the test inputs.
 `clay workflows nodes test` runs list fan-out. Use `--source-run` to reuse upstream list
 data, `--inputs` for manual node-step inputs, or both to replace some of the source run's inputs.
 
-If `clay` isn't on PATH or `clay whoami` fails on auth, run the `setup` skill.
+For tool access or authentication problems, read the `clay` entry skill before continuing.
 
 Tests that create workflow runs use the workflow's run allowance. For a run-limit error,
 follow [Workflow run allowance](SKILL.md#workflow-run-allowance); retrying does not reset it.
@@ -163,8 +163,8 @@ them with `nodes test`. It runs only the one node and then ends the run, so ever
 skipped — anything those nodes write (CRM updates, campaign or sequence enrollment, attribution)
 silently never happens, while the run reports `completed`.
 
-Use `clay workflows runs rerun` instead. If `clay workflows runs rerun --help` fails, the CLI
-predates the command: ask the user to update it, or to open the workflow's Runs view in Clay,
+Use `clay workflows runs rerun` instead. If the rerun operation is unavailable, consult the `clay` entry skill
+for access guidance, or ask the user to open the workflow's Runs view in Clay,
 select the failed runs, and choose Re-run > Resume from failed node.
 
 ```bash
@@ -257,9 +257,8 @@ clay workflows code test --file handler.py --inputs sample.json --output-schema 
 ```
 
 `outputs.json` contains the schema itself, without an `outputSchema` wrapper: either flat
-fields such as `{"owner":{"type":"string","description":"Assigned owner"}}`, or, when the installed
-CLI's `--output-schema` help mentions JSON Schema, the JSON Schema `nodes get` returns for an
-existing node, passed through unchanged (older CLIs take only the flat map). Flat fields
+fields such as `{"owner":{"type":"string","description":"Assigned owner"}}`, or the JSON Schema
+`nodes get` returns for an existing node, which can be passed through unchanged. Flat fields
 are all required and non-null, so a successful Python return containing `{"owner":null}` fails
 the schema test. JSON Schema keeps its own `required` list. Run time enforces type, required, number `minimum`/`maximum`, and array `minItems`/`maxItems`; string `format`, `enum`, `pattern`, `minLength`, `maxLength` and `additionalProperties` are stored but not enforced. Test representative missing-data and
 non-qualifying inputs as well as the happy path. Choose the missing-value behavior deliberately;

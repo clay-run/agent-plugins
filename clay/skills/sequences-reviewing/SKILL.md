@@ -1,11 +1,13 @@
 ---
-name: campaigns-sequence-reviewing
-description: Review Clay Sequencer copy as the intended recipient and identify only material, actionable objections.
+name: sequences-reviewing
+description: Review Clay sequence (formerly campaign) email copy as the intended recipient and identify only material, actionable objections.
 ---
 
-# Clay Sequencer sequence reviewing
+# Clay sequence reviewing
 
-If the `campaigns` skill is not already loaded, load it before acting. Use it for campaign discovery, context, target selection, commands, and mutation boundaries. Use this skill for sequence-review decisions.
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
+If the `sequences` skill is not already loaded, load it before acting. Use it for sequence discovery, context, target selection, commands, and mutation boundaries. Use this skill for sequence-review decisions.
 
 Use this skill after drafting or revising sequence copy, or when the user asks for a review. The same agent that writes the copy performs the review.
 

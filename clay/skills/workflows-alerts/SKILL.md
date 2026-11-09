@@ -6,6 +6,8 @@ allowed-tools: Bash(clay *), Bash(jq *), Read
 
 # Workflow alerts
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Alert rules watch a workflow's published runs and notify its subscribers. Commands live under
 `clay workflows alerts`; run `clay workflows alerts <command> --help` for exact JSON shapes and
 error codes.
@@ -21,8 +23,8 @@ error codes.
 | Recipients                             | `clay workflows alerts destinations get <workflowId>`                            |
 | Subscribe yourself to alert emails     | `clay workflows alerts subscribe <workflowId>`                                   |
 
-If `clay workflows alerts` is not a command, the installed CLI predates alert support: say so and
-point the user to the workflow's Alerts panel in the Clay app. Do not try other commands or the API.
+If the alert operations are unavailable, consult the `clay` entry skill for access guidance
+or point the user to the workflow's Alerts panel in the Clay app. Do not work around the missing operations through direct API calls.
 
 ## Workflow
 
@@ -77,16 +79,11 @@ point the user to the workflow's Alerts panel in the Clay app. Do not try other 
 6. **Keep email subscription separate.** Subscribing is explicit, workflow-wide, and only for the
    current user. Creating a rule subscribes no one. When the user says "alert me", check
    `isCurrentUserSubscribed` from `destinations get`, not whether the recipient list is empty.
-   If it is false, ask whether to subscribe them by email. A workflow has room for only one email
-   subscriber, and `subscribe` can return `conflict` for two reasons. If the message names who
-   already receives the alerts, the slot is taken: explain that the existing subscriber has to be
-   changed in the Clay app. If it says the subscribers are being changed and to try again in a few
-   seconds, another change is in progress: wait a few seconds and rerun `subscribe` once (it is
-   safe to repeat); if it still conflicts, say the subscription didn't complete. Every rule, including
-   `run_error`, notifies on the workflow's email and Slack delivery schedules; those schedules are
-   read-only here. Changing schedules or the repeat interval, choosing a Slack channel, adding
-   other users, unsubscribing, test sends, and resolving alerts happen in the Clay app. Point the
-   user there instead of claiming success.
+   If it is false, ask whether to subscribe them by email; subscribing again is safe. Every rule,
+   including `run_error`, notifies on the workflow's email and Slack delivery schedules; those
+   schedules are read-only here. Changing schedules or the repeat interval, choosing a Slack
+   channel, adding other users, unsubscribing, test sends, and resolving alerts happen in the Clay
+   app. Point the user there instead of claiming success.
 7. **Handle results.** On `approval_required`, use the host's approval flow with
    `details.actionApprovalRequestId`; never approve on the user's behalf, and never rerun the
    command after approval, because approving runs it. On a `not_found` that says alerts are not

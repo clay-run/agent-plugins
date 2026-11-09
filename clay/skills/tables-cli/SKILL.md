@@ -3,10 +3,11 @@ name: tables-cli
 description: Clay tables — inspect, query, and export data from an existing table via the `clay tables` CLI (list, columns, rows, query-live, structured query). To investigate a table or record, use the focused `/tables-*` skills (analyze, trace, error-sweep, value-trace, capacity).
 ---
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Clay tables are spreadsheet-like: columns (basic, formula, or enrichment), rows
 (usually people or companies), and sources that add rows. This skill only **reads**
-tables that already exist. If `clay` isn't on PATH or `clay whoami` fails on auth,
-run the `setup` skill.
+tables that already exist. For tool access or authentication problems, read the `clay` entry skill before continuing.
 
 ## Finding a table
 
@@ -22,7 +23,7 @@ ID prefixes: `t_` table, `f_` column, `r_` row, `wb_` workbook.
 
 - **Creating tables** (or adding fields/columns). Tell the user to create the table
   in the Clay app first; you can work with it once it exists.
-- **Writing data.** The CLI cannot insert rows, update cells, or trigger enrichments.
+- **Writing data.** These table operations cannot insert rows, update cells, or trigger enrichments.
   `clay tables update` only toggles whether a table is queryable (`--query-enabled`);
   it does not write data. Rows enter through the Clay app. The Public API is
   query/list-only as well.

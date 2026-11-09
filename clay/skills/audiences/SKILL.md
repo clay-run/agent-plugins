@@ -5,6 +5,8 @@ description: Clay Audiences — the workspace's own people, companies, and deals
 
 # Clay Audiences
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Audiences is Clay's CRM-shaped store of **people** and **companies** (plus deal
 records). An **audience** — also called a saved segment — is a named filter over
 one entity type. Nothing is copied into it: it selects records live, so its
@@ -75,7 +77,7 @@ Supported `--entity-type` values by command (all under `clay audiences`):
 | `records get`, `records search-ids`, `records search-count`, `fields list`, `fields list-values` | `people`, `companies`, `deals` | Supported; deal searches with this flag must be unfiltered |
 | `list`, `create`                                                                                 | `people`, `companies`          | Not supported; saved audiences target people or companies  |
 | `fields create`, `fields update`, `fields delete`, `fields segments`                             | `people`, `companies`          | Not supported                                              |
-| `signals get --entity-id`                                                                        | `people`, `companies`          | Not supported                                              |
+| `signals list --entity-id`                                                                       | `people`, `companies`          | Not supported                                              |
 
 Use these exact plural values: `person`, `company`, and `deal` are invalid.
 Commands not listed above do not take `--entity-type`; segment-scoped commands
@@ -110,6 +112,8 @@ clay audiences archive <audienceId>               # soft delete, idempotent; rec
   is immutable after creation. Omitted flags are left alone.
 - `get` returns an id-free filter. Inspect it for unsupported clauses
   before using it to clone an audience; see `filters.md`.
+- `archive` and `fields delete` may answer `approval_required`. Present the
+  request for the user's decision rather than retrying; approving runs it.
 
 ### Choosing a segment
 
@@ -236,14 +240,13 @@ not a paging loop over `search-ids`.
 
 ### Budget the walk before you start it
 
-`search-count` first, then decide whether a full walk fits. Both stages spend the
-same per-command budgets, and the second one dominates:
+`search-count` first, then decide whether a full walk is needed. Searches and
+record fetches share the workspace's Audiences budget:
 
 - **ids** — unsorted `search-ids` pages at `--limit` ids per call (default 50, max 10,000).
   Size it from the count: aim for about 10 calls.
-- **field values** — `records get` takes 100 ids per call and is charged per id
-  against its hourly budget, so the detail pass costs `count/100` calls that no
-  batching shrinks. You can only make up to 60 calls per minute.
+- **field values** — `records get` takes up to 100 ids per call. Batch known ids
+  to reduce requests and fetch only the records needed to answer the question.
 
 When that does not fit your data size, **narrow the scope instead of grinding through it**:
 tighten the filter — a shorter date window is usually the biggest
@@ -258,12 +261,16 @@ segment, such as recent email or call activity, campaign touches, source mix, or
 activity volume over a period.
 
 ```bash
-clay audiences activities get --segment-id audseg_abc --since 2026-08-01 --until 2026-08-20 --activity-types call
+clay audiences activities list --segment-id audseg_abc --since 2026-08-01 --until 2026-08-20 --activity-types call
 clay audiences activities summary --segment-id audseg_abc --since 2026-08-01 --until 2026-08-20 --activity-types call --sources CLAY_SEQUENCER
 ```
 
-- Use `activities get` for the raw activity feed. It returns cursor-paginated
+- Use `activities list` for the raw activity feed. It returns cursor-paginated
   events for records in the segment.
+- Event `data` contains source-specific fields when available. The 1 MiB page cap
+  may return fewer events than requested. Follow each cursor until none remains
+  to retrieve all events. An event with `truncated: true` contains partial data;
+  lowering `--limit` does not recover its omitted content.
 - For distinct-record coverage, read `queries.md` and use `--query` with
   `activities.exists(...)`. Before saving criteria as an audience, follow
   [Saved segment restrictions](filters.md#saved-segment-restrictions); activity
@@ -275,7 +282,7 @@ clay audiences activities summary --segment-id audseg_abc --since 2026-08-01 --u
 - Bound activity reads to the requested time window and activity types. These
   queries can take a few seconds on large segments, so prefer one targeted
   request over repeated exploratory calls.
-- It is okay to page through `activities get` with each returned cursor when the
+- It is okay to page through `activities list` with each returned cursor when the
   user needs the full bounded result set. Continuation requests pass only
   `--cursor` and optional `--limit`; do not repeat time, activity-type, or source
   filters with a cursor. Do not loop for freshness or repeatedly rerun broad
@@ -333,7 +340,7 @@ Once the intended meaning is clear:
 - **Signal questions should use signal-specific surfaces.** Do not use
   `clay audiences activities` commands to answer signal-event questions; those
   commands read activity rows and can miss signal-specific event detail.
-- **Read captured events by record or segment.** `clay audiences signals get`
+- **Read captured events by record or segment.** `clay audiences signals list`
   returns the full event history for one person or company with `--entity-id`,
   or full payloads across a saved segment with `--segment-id`. The
   `signals summary` command groups a segment's counts by signal id and type.
@@ -348,17 +355,17 @@ Once the intended meaning is clear:
   audience's signal firing?"
 
 ```bash
-clay audiences signals get --entity-id 123 --entity-type people --days-lookback 30
-clay audiences signals get --segment-id audseg_abc --since 2026-08-01 --until 2026-08-20 --signal-types JobPost,News
+clay audiences signals list --entity-id 123 --entity-type people --since 2026-08-01
+clay audiences signals list --segment-id audseg_abc --since 2026-08-01 --until 2026-08-20 --signal-types JobPost,News
 clay audiences signals summary --segment-id audseg_abc --since 2026-08-01 --signal-types JobPost --signal-ids sig_abc
 ```
 
-- Use `signals get --entity-id` when the user names one record. Pass the numeric
+- Use `signals list --entity-id` when the user names one record. Pass the numeric
   id from `clay audiences records search-ids`, its `--entity-type`, and an
-  explicit `--days-lookback`. It returns that record's events newest first;
-  continuation calls repeat all three scope flags and pass the returned
-  `--cursor`.
-- Use `signals get --segment-id` when the event payloads across a saved segment
+  explicit `--since` (and optional `--until`). It returns that record's events newest first;
+  continuation calls repeat `--entity-id` and `--entity-type` with the returned
+  `--cursor`, without time filters.
+- Use `signals list --segment-id` when the event payloads across a saved segment
   matter. It returns one cursor page with `data`, timestamps, signal id and
   type, and matched-entity count.
 - Use `signals summary` for totals and first/last activity times. A summary can
@@ -382,25 +389,10 @@ not-found. `3` on an audiences command usually means Audiences is not enabled fo
 the workspace — that is a workspace-config answer for the user, not something to
 retry.
 
-`4` (`rate_limited`) means the workspace spent its request budget for that one
-command. The budget is per command and shared by everyone in the workspace, so a
-`fields list` loop cannot starve `search-count`. It defaults to 60 calls/minute
-and a workspace can be raised above that, so read `details.limit` off the error
-rather than assuming the default.
+`4` (`rate_limited`) means the workspace reached an Audiences rate limit.
+Most Audiences requests share a workspace budget. `records get` has a separate
+100,000-record allowance per workspace that replenishes at 100,000 records/hour,
+charged by the number of IDs requested. Activity from another caller can affect when a retry succeeds.
 
-Sleep `details.retryAfter` seconds and carry on. A request-rate rejection costs no
-budget and writes nothing, so repeating the identical call — including a `create`
-or `update` — once the wait is over is safe.
-
-`records get` carries a second budget: an hourly one charged per record id it
-returns, which batching does not reduce. Read its 429s more carefully than the
-rest:
-
-- `details.limit` is records/hour (default 100,000), not calls/minute, and the
-  message says "Hourly records limit" rather than "Too many requests".
-- The rejected call **did** spend a request token — that one is not refunded — so
-  the wait it asks for can end in a second 429, this time from the per-minute
-  rate. Back off again rather than reading it as a failure.
-
-That budget exists to prevent data exfiltration, so be conservative: before
-pulling a large set, check whether a sample of records answers the request.
+Wait `details.retryAfter` seconds before retrying. If the retry is also rate
+limited, follow its retry delay instead of repeatedly sending the request.

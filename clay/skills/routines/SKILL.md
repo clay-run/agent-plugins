@@ -5,6 +5,8 @@ description: Clay routines — create a routine from an existing function/workfl
 
 # Running Clay routines
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 A **routine** is the runnable unit in Clay: a saved **function** or **workflow** that
 already exists in this workspace. This skill is about _running_ an existing routine and
 getting its results — not building one.
@@ -118,10 +120,10 @@ runs do not need a cost-only check-in. `clay routines get <id>` includes a per-i
 
 ```bash
 clay routines get function:t_abc123 | jq '.estimatedCreditCost'
-clay credits balance | jq '{ balance, actionExecutionBalance }'
+clay credits balance | jq '{ balance, actionExecutionBalance, user }'
 ```
 
-There are **two independent budgets**, and a run needs enough of each:
+There are **two independent workspace budgets**, and a run needs enough of each:
 
 - `estimatedCreditCost.perRun` is charged against the data-credit `balance`.
 - `estimatedCreditCost.actionExecution` (when supplied) is charged against the separate
@@ -131,6 +133,12 @@ There are **two independent budgets**, and a run needs enough of each:
   on legacy billing **or** the estimate carries no priced action executions. Whether
   `clay credits balance` returns `actionExecutionBalance` is what tells the plans apart —
   present means action-execution pricing, absent means legacy.
+
+A run billed to the user also counts against their personal monthly credit limit,
+reported as `user.limit` and `user.balance` (both null when they have none). Whether a run
+is billed to the user depends on workspace settings, so treat `user.balance: 0` as a likely
+blocker to mention, not a verified shortfall. A credit budget assigned to the user can also
+stop a run, and `clay credits balance` does not report it.
 
 For how to read the balance and how the cost fields work, see the help text:
 
@@ -168,6 +176,9 @@ clay routines runs start <id>     # see --help for how to pass items/inputs
 - A single inline run takes **1-100 items**; each item is a set of `inputs` matching the
   routine's input schema.
 - For larger sets, routines support a **batch** run over an uploaded JSONL file.
+- A run can answer `approval_required`, because a routine's steps can act outside Clay. Present
+  the request for approval as the `cli` skill describes. Approving starts the run, so don't run
+  the command again.
 
 Run `clay routines runs start --help` for the exact flags, the input/JSON shape, and how
 to supply items.
@@ -204,6 +215,10 @@ after which the id stops resolving.
 
 Per-item results come back with a status (`complete` / `failed`) and either a `result`
 or an `error`.
+
+While an inline run is still `in_progress`, the response can include `data` with the items
+that have finished so far (up to `--limit`, no `cursor`). Use those to act on early results
+or show progress, but wait for `complete` before treating the result set as final.
 
 `clay routines runs get` returns a single page of inline results. Since an inline run
 has at most 100 items, `--limit 100` returns every result in one page. If you use a

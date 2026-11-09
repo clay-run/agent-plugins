@@ -5,6 +5,8 @@ description: Clay ad syncs — push an audience segment to ad platforms (LinkedI
 
 # Ad syncs
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 An ad sync pushes an audience segment to ad accounts on ad platforms, called its destinations. Each
 platform matches the records and builds an audience to advertise to.
 

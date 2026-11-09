@@ -6,13 +6,15 @@ allowed-tools: Bash(clay *), Bash(grep *), Bash(cat *), Bash(wc *), Bash(jq *), 
 
 # Discover enrichments with search
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Use this skill before choosing enrichments, connector actions, or reusable functions
 for a workflow. Start with ranked search, inspect actual schemas, and use `catalog.md`
 for unresolved requirements, connection discovery, or unavailable search.
 
 If `clay workflows actions search` is unavailable or returns a workspace-enablement
 error, use `catalog.md` instead. A failed search is not evidence that no matching
-enrichment exists. If the CLI is not installed or authenticated, follow the `cli`
+enrichment exists. For tool access or authentication problems, read the `clay` entry
 skill before attempting discovery.
 
 For pricing and spending decisions, read `cost-and-budget.md`.
@@ -26,11 +28,12 @@ functions (`type: "subworkflow"`). “Workflow function” is the user-facing te
 when speaking with users, and recognize “subworkflow” as the same concept. Use
 “table function” to distinguish table-backed functions, and preserve technical
 identifiers such as `subworkflow` and `subworkflow_call` in API payloads.
-Only workflow functions can be called from a Workflow step. Publishing an
-ordinary workflow or registering it as a routine does not make it a workflow
-function. If node creation or `clay functions get workflow:<id>` reports that a
-workflow is not a workflow function, tell the user it cannot be called as a step
-instead of retrying.
+Only workflow functions can be called with a `subworkflow_call` node. Table
+functions use a `tool` node with a `tools` entry containing
+`toolType: "clay_function"` and `tableId` set to the function ID. Publishing an ordinary
+workflow or registering it as a routine does not make it a workflow function. If node
+creation or `clay functions get workflow:<id>` reports that a workflow is not a workflow
+function, tell the user it cannot be called as a workflow function instead of retrying.
 Functions may encapsulate
 multiple steps, including installed waterfalls. Compare both against the requested
 inputs and outputs; a suitable function can satisfy a capability without composing
@@ -156,6 +159,10 @@ provider parameter names. Never update the generated call bindings or hidden chi
    retrieval limit or fetch unseen rows. Do not replace a missing capability with
    an unspecified native join, pagination loop or other unverified operation.
    Name the supported retrieval step and retain its limitations.
+   A category enum need not cover every concept the user requested. Check whether
+   documented keyword search can retrieve the missing concept, then use supported
+   semantic classification or deterministic filtering as appropriate. Classification
+   can assess retrieved content; it cannot recover content the retrieval excluded.
 6. Select one or more grounded results and pass them to the existing workflow
    builder. Copy each `candidateId`, `packageId`, `actionKey` or `functionId`
    verbatim from the tool response; never reconstruct an identifier from memory.
@@ -179,6 +186,9 @@ options. Do not exhaustively inspect every result or repeat searches just to fil
 shortlist. Before declaring a capability unavailable, try a broader search as well
 as the specific one. A search error is a technical failure, not evidence that no
 matching enrichment exists; report it separately from any catalog recovery.
+No matches establish only that those searches found none, not that the workspace
+lacks the capability or has it disabled. State the discovery limit unless explicit
+capability or enablement evidence supports a stronger conclusion.
 
 If a specific and a broader search still leave a requirement unsupported, use
 `clay workflows actions list` to look for a complementary action, unless the session
@@ -194,7 +204,12 @@ support the requirements and no material ambiguity remains, stop. Explain any
 requirement that remains unsupported.
 
 Check requiresApiKey before requiring a provider connection (for catalog selections,
-read actionLabels.requiresApiKey on the selected action). When a connection is required,
+read actionLabels.requiresApiKey on the selected action). A false value supports
+saying no customer-supplied provider credentials are required; null or missing is
+unknown, not false. A function's managed source identifies who maintains it, not
+its credential requirements. Keep unknown prerequisites qualified rather than
+claiming a connection is required or unnecessary without evidence.
+When a connection is required,
 or the user requests their own credentials, use the action's appAccountType with
 `clay app-accounts list --filter type=<appAccountType>`.
 Reuse the returned accounts for other selected actions with the same connection type.

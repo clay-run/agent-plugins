@@ -6,6 +6,8 @@ allowed-tools: Bash(clay *), Bash(jq *), Read
 
 # Build an audience enrichment workflow
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Use this skill for an existing `audience_enrichment` workflow or an explicitly requested
 Audience-backed bulk enrichment migration. It owns the
 workflow-specific sequence: build enrichment steps, ensure the shared final Audiences writeback,

@@ -8,11 +8,11 @@ segments), managing field definitions, reading and counting records, and writing
 filter ASTs — use the **`audiences` skill**. Do not rediscover the `clay audiences`
 CLI here.
 
-**Read with the CLI, write records with the action.** `clay audiences` has no
-command that writes a field value onto a record, so any workflow step that
-populates people or companies uses the action below. Audiences itself is
-CLI-only — no MCP tool or `surfaces_*` resource type reads segments or fields,
-so don't go looking for one.
+**Inspect audiences with the audience operations; write records with the action.**
+The audience operations inspect records and manage segments and field definitions;
+they do not write field values onto records. Any workflow step that populates
+people or companies uses the action below. For access instructions, read the
+`clay` entry skill.
 
 ## Decide whether to write back
 
@@ -109,8 +109,11 @@ When attaching this action to a tool node, use:
 
 ### Lookup vs record fields
 
-- **Lookup fields** are the keys used to find an existing audience record. For contacts these are fixed (`email`, `linkedin_url`, `phone`); for accounts (`domain`, `linkedin_url`). The values you pass under `lookupFields|<id>` are matched against existing records — if any match, the record is updated; otherwise a new one is created.
+- **Lookup fields** identify the audience record to update. Contacts support `id`, `email`, `linkedin_url`, `phone`, and `external_source_id`; accounts support `id`, `domain`, `linkedin_url`, `clay_company_id`, and `external_source_id`. Bind each selected key under `lookupFields|<id>`. The Audiences record `id` is checked first; other selected keys are tried in their selected order. Matching only on `id` updates existing records. To create a record when no match exists, include another lookup key with a valid value.
 - **Record fields** are the data written onto the matched (or newly created) record. These are workspace-defined and vary per workspace; call `clay audiences fields list` with `--entity-type people` or `--entity-type companies` to discover the available ids.
+
+For an `audience_enrichment` trigger, preserve its existing record identity by following the
+`workflows-audience-enrichment` skill's `lookupFields|id` binding guidance.
 
 ### Required keys
 
@@ -152,7 +155,7 @@ mappings and skips defaults. These defaults do not apply to enrichment of existi
 
 ### Discover real field IDs
 
-Run `clay audiences fields list` with `--entity-type people` or `--entity-type companies` first — schema ids and English names often differ (account "company name" is `org_name`). For planning-only requests that prohibit workspace queries, use the supplied catalog and defer ID discovery until editing is authorized. It returns the workspace's record field catalog; lookup keys are fixed (CONTACT → `email`, `linkedin_url`, `phone`; ACCOUNT → `domain`, `linkedin_url`).
+Run `clay audiences fields list` with `--entity-type people` or `--entity-type companies` first — schema ids and English names often differ (account "company name" is `org_name`). For planning-only requests that prohibit workspace queries, use the supplied catalog and defer ID discovery until editing is authorized. It returns the workspace's record field catalog, not the lookup keys listed above.
 
 Match each upstream output by meaning and data type, using the workflow context:
 
@@ -184,8 +187,8 @@ Do not claim field creation is unsupported or hand it back to the user without a
 error establishing a blocker. Use the `audiences` skill for command details.
 
 For a planning-only request, state the new field's name and type and the write-to-audiences
-mapping you will create through the CLI, without executing anything. Do not add hypothetical
-CLI limitations or a manual handoff. Carry forward agreed field names and mappings; ask only
+mapping you will create with the audience operations, without executing anything. Do not add hypothetical
+access limitations or a manual handoff. Carry forward agreed field names and mappings; ask only
 about unresolved choices needed for the requested work, not speculative gates, extra outputs,
 or testing the user has excluded.
 

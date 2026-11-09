@@ -77,10 +77,10 @@ clay audiences records search-ids --query 'select from companies where signals.n
 ```
 
 Activity columns include `activity_type`, `activity_timestamp`, and `title`.
-`activity_type` uses the enum values shown by `activities get --help`, such as
+`activity_type` uses the enum values shown by `activities list --help`, such as
 `email` and `meeting`. For type-specific fields, use
 `activities.<activityTypeId>.exists(...)` with the id returned by `activities
-get/summary`, or the type's normalized display name.
+list/summary`, or the type's normalized display name.
 
 Signal type names use snake case (`job_post`, `new_hire`, `news`, `job_change`)
 or their enum spelling. Use `signals.job_post.exists(...)` and
@@ -96,7 +96,7 @@ Keep requested payload restrictions in every count, ID search, and saved filter:
 funding news requires `topics = "Fundraising"`; a recent News event alone is not
 a match. Broader diagnostic searches must not expand the delivered audience.
 Ground reported event details and dates in returned event data. When existing
-results lack those details, use `clay audiences signals get` with the relevant
+results lack those details, use `clay audiences signals list` with the relevant
 record or segment and requested window. Once the workspace-record scope is
 established, query these event relationships directly; trigger inventories and
 the saved-audience list are not prerequisites.

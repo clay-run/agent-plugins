@@ -6,6 +6,8 @@ allowed-tools: Bash(clay *), Bash(jq *), Read
 
 # Value-trace
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 **Use when:** you have a record and want to explain **one cell** — "where did this email come from?", "why did Enrich Person error?", "why didn't Push to HubSpot run?", "why is this value empty?". This walks a single column **backward** through its dependencies to find the origin or the root cause. Causation, not state — `/tables-trace` gives you the state snapshot first.
 
 The method combines two things:

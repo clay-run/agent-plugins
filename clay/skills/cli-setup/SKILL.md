@@ -1,10 +1,21 @@
 ---
-name: setup
-description: Clay setup — install and authenticate the `clay` CLI, which is how the plugin talks to Clay. Use when `clay` is not found on PATH or the `clay` found in the PATH is the wrong version, `clay whoami` fails, the CLI isn't signed in, the Cursor plugin never appears after a local install, or the user wants to configure Clay. Signs the user in and runs first-run onboarding for new users.
+name: cli-setup
+description: Clay CLI setup — install and authenticate the `clay` CLI for command-line access to Clay. Use when the user asks to install or sign into the CLI, or a task that needs the CLI finds `clay` missing from PATH, at the wrong version, or failing `clay whoami` / not signed in. Also use when the Cursor plugin never appears after a local install, or the user wants to configure Clay. Signs the user in and runs first-run onboarding for new users.
 allowed-tools: Bash, Read, Edit, Write
 ---
 
-# Clay setup
+# Clay CLI setup
+
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
+## 0. Check whether the task needs CLI setup
+
+Continue with this skill when the user asks to install or sign into the CLI,
+asks to fix plugin registration (for example, a Cursor plugin that never appears), or
+the task uses the CLI. Honor the user's choice of CLI even when Clay MCP tools are
+connected. For a task already using MCP, return to the skill you came from: a
+missing, outdated, or signed-out `clay` executable does not affect the MCP session
+and does not require CLI setup.
 
 Install the CLI independently of the plugin, then check authentication. The same flow
 applies to Claude Code, Codex, Cursor, and Cowork. Keep existing credentials and the

@@ -4,13 +4,16 @@ A `csv_upload` trigger runs a workflow from a CSV file: each row starts one run,
 with the row's cells as the run inputs. It is the CLI equivalent of dropping a CSV
 onto a CSV trigger in the workflow editor.
 
+The file stays linked to the trigger node, so its rows can be run again later. When the user
+only wants to run a CSV's rows through the workflow once, don't create a CSV trigger: run the
+workflow as a routine with one item per row (see "Running a workflow as a routine" in
+`SKILL.md`).
+
 The trigger must already exist and be a `csv_upload` trigger, and every command takes its
 id. To get the id, list the workflow's trigger ids with `clay workflows graph get
-<workflowId>` (`.triggers[].id`) — this is available on both the CLI and Sculptor. To
-create the trigger: on the CLI use `clay workflows triggers create <workflowId> --input
-'{"triggerType":"csv_upload"}'` (its result carries the new `resourceId`); in Sculptor,
-where `triggers create` isn't available, create it from the trigger in the workflow editor,
-then read its id with `graph get`.
+<workflowId>` (`.triggers[].id`). To
+create the trigger, use `clay workflows triggers create <workflowId> --input
+'{"triggerType":"csv_upload"}'` (its result carries the new `resourceId`).
 
 A newly created `csv_upload` trigger has no file, so it can't run anything yet. After
 creating one, ask the user for the CSV to run through the workflow — have them attach it to
@@ -22,8 +25,7 @@ A `csv_upload` trigger goes live when it's created — with no separate publish 
 can still be paused from the editor, and a paused trigger makes `csv run` fail. Neither
 `triggers get` nor `graph get` reports a trigger's status, so a run failing as not-live is the
 signal that it is paused. On the CLI resume it with
-`clay workflows triggers update <triggerId> --input '{"status":"live"}'`; in Sculptor, which
-has no `triggers update`, have the user resume the trigger in the editor.
+`clay workflows triggers update <triggerId> --input '{"status":"live"}'`.
 
 A run always executes the workflow's **current draft graph** as it stands the moment the
 run starts — there is no way to run the last published version through this command. Any
@@ -90,8 +92,8 @@ created with, e.g.:
 clay workflows triggers csv upload <triggerId> --file /mnt/session/uploads/leads.csv
 ```
 
-If no `csv_upload` trigger exists yet, create one first (see above — CLI
-`triggers create`, or the editor in Sculptor), then upload. Confirm the columns from the
+If no `csv_upload` trigger exists yet, create one first with
+`clay workflows triggers create` (see above), then upload. Confirm the columns from the
 command's `csvFile.headers` (watch for duplicates), then run it as step 2 above describes.
 
 ## Downstream mappings

@@ -29,7 +29,7 @@ Then open **Plugins** and install **clay**.
 ### Cursor
 
 A plain local copy into `~/.cursor/plugins/local/clay` can silently fail on Teams/Enterprise org
-policy — don't guess. Clone the marketplace repo, then hand off to the bundled **`setup` skill**,
+policy — don't guess. Clone the marketplace repo, then hand off to the bundled **`cli-setup` skill**,
 which reads the effective policy and picks a path that works (see the skill's own **Cursor
 only** step for why and how):
 
@@ -37,31 +37,31 @@ only** step for why and how):
 git clone https://github.com/clay-run/agent-plugins.git /tmp/clay-agent-plugins
 ```
 
-Then read `/tmp/clay-agent-plugins/clay/skills/setup/SKILL.md` and follow it like a runbook —
-see [Run the `setup` skill](#run-the-setup-skill) below. Once setup finishes, delete the clone
+Then read `/tmp/clay-agent-plugins/clay/skills/cli-setup/SKILL.md` and follow it like a runbook —
+see [Run the `cli-setup` skill](#run-the-cli-setup-skill) below. Once setup finishes, delete the clone
 (`rm -rf /tmp/clay-agent-plugins`) — whichever path the skill picked already copied what it
 needs to a permanent location.
 
-## Run the `setup` skill
+## Run the `cli-setup` skill
 
 The CLI installs independently of the plugin. Setup defaults to a native executable
 at `~/.local/bin/clay`; organizations that require Node-based execution can choose
 `@clay-run/cli` through npm. Existing plugin launchers are migrated during setup,
 without replacing your saved sign-in. You do not need Node for the native install.
 
-Once installed, run the bundled **`setup` skill** now, in this session, before anything else below. It puts `clay` on PATH, signs you in, and verifies the CLI works.
+Once installed, run the bundled **`cli-setup` skill** now, in this session, before anything else below. It puts `clay` on PATH, signs you in, and verifies the CLI works.
 
-- Try invoking the plugin's `setup` skill directly by its fully qualified name, `clay:setup` — Claude Code's Skill tool supports this, and Codex or Cursor may too depending on version.
+- Try invoking the plugin's `cli-setup` skill directly by its fully qualified name, `clay:cli-setup` — Claude Code's Skill tool supports this, and Codex or Cursor may too depending on version.
 - If it doesn't, or the skill doesn't show up right after installing (some platforms don't register a newly installed plugin until restarted), locate `SKILL.md` yourself and follow it like a runbook:
 
   ```
   find ~/.codex ~/.cursor ~/.claude ~/.config -type f \
-    \( -path '*/clay/skills/setup/SKILL.md' -o -path '*/clay/*/skills/setup/SKILL.md' \) 2>/dev/null | sort | tail -n1
+    \( -path '*/clay/skills/cli-setup/SKILL.md' -o -path '*/clay/*/skills/cli-setup/SKILL.md' \) 2>/dev/null | sort | tail -n1
   ```
 
   Read the path that prints and carry out its steps directly.
 
-If something doesn't work, follow the setup skill's **Cursor only** section for plugin
+If something doesn't work, follow the CLI setup skill's **Cursor only** section for plugin
 registration problems, **Install or migrate the CLI** for executable and PATH problems,
 and **Sign in when needed** and **Verify and onboard** for authentication failures.
 

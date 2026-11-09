@@ -5,6 +5,8 @@ description: 'Clay workflows — simplify a workflow via the CLI (`clay workflow
 
 # Simplifying a workflow
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Analyze the current workflow and suggest concrete simplifications to reduce complexity, improve reliability, and lower costs.
 
 ## Process
@@ -50,8 +52,16 @@ Two adjacent nodes can often be combined into one if:
 When a downstream node needs specific typed data from an upstream node:
 
 - Add `outputSchema` to the upstream node
-- On the downstream agent node, pin each input via `sourceNodeId`/`sourcePath` inline on the `inputSchema` property (see the `workflows` skill's `data-passing.md`)
+- On the downstream agent or code node, pin each input via `sourceNodeId`/`sourcePath` inline on the `inputSchema` property (see the `workflows` skill's `data-passing.md`)
 - This preserves exact values across nodes
+
+### Replace a threaded state object
+
+Look for code nodes that each take one serialized state input (often `state_json`) from the previous code node and return it changed. That state gets copied into every step it passes through, so step inputs and outputs keep growing. Suggest:
+
+- A declared `outputSchema` on each code node with the fields it produces
+- Downstream nodes pinning only the fields they read, from the node that produced them
+- One final code node that builds any combined summary from the stage outputs
 
 ### Simplify tool usage
 

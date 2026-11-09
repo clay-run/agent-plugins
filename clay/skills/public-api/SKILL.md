@@ -5,15 +5,17 @@ description: 'Clay Public API — HTTP access for building services, apps, and i
 
 # The Clay Public API
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Beyond the CLI, Clay exposes a Public API you can develop against directly over HTTP.
 Reach for it when building a service, app, or integration — not for one-off agent tasks
-in a shell (use the `cli` skill for those).
+(use the `clay` entry skill to select access and the relevant domain skill).
 
 ## What it offers
 
 - **Search** — find people or companies in Clay's GTM database with **advanced queries**:
   criteria from the fields catalog, cross-entity filters, and nested Boolean logic.
-  See the `searches` skill for search behavior and the CLI equivalent. Prefer the CLI for one-off searches.
+  Use the `searches` skill for one-off searches and search behavior.
 - **Tables** — structured queries against Clay tables.
 - **Routines / batches** — async routine and batch runs.
 

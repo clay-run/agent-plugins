@@ -35,6 +35,18 @@ also work workspace-wide (`aggregate`, `runs`, `search`) take it as an optional
    agent reasoning, tool results). Finds where a value, error phrase, or
    entity appeared; follow up on the returned run ids with `runs` or `steps`.
 
+## Reading values across many runs
+
+Don't loop `clay workflows runs get` once per run over many runs: it is slow and repeats
+the full run payload each time. For a count or a filter over run content, ask for it
+directly with `aggregate`, `search`, or `clay workflows runs query run`. For per-run
+values across 20 or more runs, export them in one CSV with
+`clay workflows runs export start <workflowId> [--status ...|--query ...] --wait 240 --output runs.csv`
+(one row per run; `--node <nodeId>:<path>` for a field's full value, since node and input
+columns hold short previews). If it is still active when `--wait` ends, resume with
+`clay workflows runs export get <exportId> --wait 240 --output runs.csv`. An export takes a
+while to start, so for fewer runs read each with `runs get`.
+
 ## Version scoping
 
 Every edit to a workflow creates a new immutable snapshot, and each run pins

@@ -1,13 +1,15 @@
 ---
-name: campaigns-sequence-writing
-description: Draft and revise complete Clay Sequencer email sequences using supplied campaign strategy and context.
+name: sequences-writing
+description: Draft and revise the email copy of Clay sequences (formerly campaigns) using the supplied sequence strategy and context.
 ---
 
-# Clay Sequencer sequence writing
+# Clay sequence writing
 
-If the `campaigns` skill is not already loaded, load it before acting. Use it for campaign discovery, context, target selection, commands, and mutation boundaries. Use this skill for sequence-writing decisions.
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
 
-Use this skill to draft a complete email sequence or revise sequence copy. Treat the supplied campaign strategy and context as the source of truth.
+If the `sequences` skill is not already loaded, load it before acting. Use it for sequence discovery, context, target selection, commands, and mutation boundaries. Use this skill for sequence-writing decisions.
+
+Use this skill to draft every step of a sequence or revise sequence copy. Treat the supplied sequence strategy and context as the source of truth.
 
 ## Message strategy
 

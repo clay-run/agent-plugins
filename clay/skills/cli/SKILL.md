@@ -5,9 +5,10 @@ description: Clay CLI — the primary scripting surface (JSON output, typed erro
 
 # The `clay` CLI
 
-The `clay` CLI is Clay's primary programmatic surface, optimized for agents: JSON
-output and typed error codes. It authenticates via **`clay login`** (browser OAuth;
-run the `setup` skill once if `clay whoami` fails). The workspace is resolved from
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
+The `clay` CLI provides command-line access optimized for agents: JSON
+output and typed error codes. For tool access or authentication problems, read the `clay` entry skill before continuing. The workspace is resolved from
 the stored session — there is no workspace id to pass.
 
 ## Use workspace context internally

@@ -6,6 +6,8 @@ allowed-tools: Bash(clay *), Bash(jq *), Read
 
 # Capacity check
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 **Use when:** "why aren't new rows being added?", "why is the import stuck?", "is this table full?", or any question about rows failing to appear. Check capacity **before** assuming a run, config, or enrichment problem — a full table silently stops accepting rows, which looks like a broken import.
 
 **Scope:** regular tables only. Archive tables are not subject to this ceiling — if the user points at an archive (`t_...` that came from another table's `archive.tableId`), say the check doesn't apply and redirect to the parent table.

@@ -5,6 +5,8 @@ description: Guide customers through building an inbound lead-routing workflow i
 
 # Inbound lead routing
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 ## Description
 
 Guide customers through building an inbound lead routing workflow in Clay Workflows. Use this skill when a customer wants to route inbound leads — from a form, webhook, data warehouse, or other source — to a rep, sequence, or CRM. Be opinionated and directive. Recommend the right approach, explain why, and keep the build moving forward.

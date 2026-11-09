@@ -6,6 +6,8 @@ allowed-tools: Bash(clay *), Bash(jq *), Read
 
 # Analyze a table
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 **Use when:** "what does this table do?", "explain the {table} workflow", "walk me through this table", "what's set up here?" — a question about the table's **structure and the workflow encoded in its columns**, not about any single record.
 
 A Clay table is a column DAG: `source` and input `basic` columns are roots; `basic` formula columns and `action` (enrichment) columns depend on the `{{f_xxx}}` tokens in their settings. Analyzing the table = reconstructing that graph, ordering it into stages, and narrating what it does. Cheap and read-only: ~3 commands (metadata + columns + a row sample).

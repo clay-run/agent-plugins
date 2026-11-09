@@ -5,6 +5,8 @@ description: Build and run Claygent agent nodes in Clay workflows. Use when the 
 
 # Claygents in workflows
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 A Claygent in a workflow is a dedicated `nodeType: "agent"` node. It is not a Clay action
 or function, so its absence from `clay workflows actions list` does not make Claygent
 unavailable. Use `/workflows-discover-actions` only for tool nodes.

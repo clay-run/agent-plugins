@@ -1,6 +1,6 @@
 ---
 name: clay
-description: Clay — start here. A table of contents for working with Clay and which skill to use for each thing — audiences (the workspace's own people/companies/deals), campaigns (create, improve, and analyze outbound email sequences), ad syncs (push audience segments to ad platforms), search (find net-new people/companies), routines (run Clay-managed and custom functions), tables (query/export data), the CLI (ephemeral programmatic access), the Public API (build services on Clay), workflows (build automations), feedback, and getting help — reaching Clay support or a human about billing, refunds, or account problems. Read this first to answer "what can I do with Clay?"
+description: Clay — start here. A table of contents for working with Clay and which skill to use for each thing — audiences (the workspace's own people/companies/deals), sequences (formerly campaigns; create, improve, and analyze outbound email sequences in Sequencer), ad syncs (push audience segments to ad platforms), search (find net-new people/companies), routines (run Clay-managed and custom functions), tables (query/export data), the CLI (ephemeral programmatic access), the Public API (build services on Clay), workflows (build automations), feedback, and getting help — reaching Clay support or a human about billing, refunds, or account problems. Read this first to answer "what can I do with Clay?"
 ---
 
 # Working with Clay
@@ -44,7 +44,7 @@ Whatever you're doing in Clay, work transparently so the user can follow along:
   (see "Getting help and reporting problems") instead.
 - **Managed sessions can't manage the install.** Inside the Clay app your Clay session
   and CLI version are provisioned for you, for one workspace: `clay login`, `clay logout`,
-  `clay update`, `clay workspaces` and the `setup` / `update` skills are unavailable. If auth fails or the CLI is out of
+  `clay update`, `clay workspaces` and the `cli-setup` / `update` skills are unavailable. If auth fails or the CLI is out of
   date there, tell the user rather than trying to fix it.
 
 - **Read business context when relevant.** When company knowledge, ICPs, buyer personas,
@@ -80,7 +80,7 @@ Before the first CLI task in Claude Code, Codex, Cursor, or Cowork, follow any
 session-start readiness message. Resolve `<PLUGIN_ROOT>` as two levels above this
 skill’s directory. If no hook message was available, run
 `bash "<PLUGIN_ROOT>/scripts/check-cli.sh" plain` from this plugin copy. Follow
-`setup` if it reports a missing, old, or plugin-managed CLI; do not reinstall or
+`cli-setup` if it reports a missing, old, or plugin-managed CLI; do not reinstall or
 check for latest releases on every command. Skip this in managed Clay sessions.
 
 ## Answering "what can I do with Clay?"
@@ -101,7 +101,7 @@ abilities. Get the framing right:
   - "Find decision-makers by title and seniority, then enrich them with verified work emails and phone numbers."
   - "Enrich a list of leads or accounts with firmographics and contact data."
   - "Score a list of records against my ideal-customer profile."
-  - "Create an outbound campaign, draft its sequence, and compare variants or reply performance."
+  - "Create an outbound email sequence, draft its emails, and compare variants or reply performance."
   - "Sync a saved segment to an ad platform as a custom audience, then check its match rate."
   - "Run a saved Clay function or workflow over a batch of inputs and collect the results."
   - "Query a table and export the rows matching a filter."
@@ -116,7 +116,7 @@ Clay exposes these core primitives (callable from the plugin/CLI/API):
 | Primitive               | What it's for                                                                       |
 | ----------------------- | ----------------------------------------------------------------------------------- |
 | **Audiences**           | The workspace's own people, companies, and deals — read and segment what they have  |
-| **Campaigns**           | Create, improve, compare, and analyze outbound email sequences                      |
+| **Sequences**           | Create, improve, compare, and analyze outbound email sequences in Sequencer         |
 | **Ad syncs**            | Push an audience segment to ad platforms as a custom audience to advertise to       |
 | **Searches**            | Find companies and people using Clay's GTM database                                 |
 | **Routines**            | Run Clay-managed functions, custom functions, and existing Workflows                |
@@ -192,7 +192,7 @@ question about the rest.
 | Skill                 | Use it for                                                                                                                                                                                                                                                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `audiences`           | Any question about the workspace's own people/companies/deals — counts, fill rates, lookups, and segments. `--entity-type deals` works on `records` and `fields list` only; other commands accepting that flag support only `people`/`companies`. Singular `deal` is invalid. See the audiences skill's command support table. |
-| `campaigns`           | Creating and improving outbound email campaigns, sequence copy, variants, and analytics.                                                                                                                                                                                                                                       |
+| `sequences`           | Creating and improving outbound email sequences (formerly campaigns), sequence copy, variants, and analytics.                                                                                                                                                                                                                  |
 | `ad-syncs`            | Pushing an audience segment to ad platforms as a custom audience, and checking a sync's status, match rate, or run history.                                                                                                                                                                                                    |
 | `searches`            | Finding net-new people or companies in Clay's GTM database — prospects and accounts that aren't already in the workspace.                                                                                                                                                                                                      |
 | `routines`            | Creating a routine from an existing function/workflow, running a saved routine, and fetching its results.                                                                                                                                                                                                                      |
@@ -243,17 +243,9 @@ Default to solving the problem with the skills above. When that isn't the answer
   the relevant skill's guidance and point the user to the Clay app. That's a product
   boundary, not a bug and not a support case.
 
-## If another Clay MCP is connected
-
-If `clay-for-reps` (the Clay MCP for sales reps) is also connected in your session,
-ignore its tools entirely. That server is designed for interactive conversational prospecting
-in chat apps (ChatGPT, Claude.ai) — it shares the same Clay workspace but is a completely
-different product. Use the `clay` CLI and these skills for all automation, data enrichment,
-and GTM operations.
-
 ## First-time setup
 
-Run the `setup` skill.
+Run the `cli-setup` skill.
 
 ## Keeping Clay up to date
 

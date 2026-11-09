@@ -1,24 +1,26 @@
 ---
-name: campaigns-events
-description: Use when the user asks what happened to a campaign lead (replied, out of office, bounced, unsubscribed, stopped getting emails, needs resuming) or works in the Campaign events table, including how replies and out-of-office count in reply rate, reply categories, rep routing, and automations or workflows built on campaign events.
+name: sequences-events
+description: Use when the user asks what happened to a lead in a Clay sequence (formerly campaign) — replied, out of office, bounced, unsubscribed, stopped getting emails, needs resuming — or works in the Campaign events table, including how replies and out-of-office count in reply rate, reply categories, rep routing, and automations or workflows built on sequence events.
 ---
 
-# Campaign events
+# Sequence events
 
-Use this to explain, filter, or build on campaign activity: the **Campaign events** table, a column, workflow, or
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
+Use this to explain, filter, or build on sequence activity: the **Campaign events** table, a column, workflow, or
 automation that reads it, or a question such as "why did this lead stop getting emails?". Answer from this skill, not
-from general sequencer knowledge: Clay configures its email provider in ways that differ from common defaults,
+from general email-sequencing knowledge: Clay configures its email provider in ways that differ from common defaults,
 especially for out-of-office replies.
 
 ## The Campaign events table
 
 Each workspace has one shared Campaign events table (named Campaign webhook events in older workspaces). Every
-campaign writes to it, and each campaign also gets a view named `<campaign name> events` that is filtered to that
-campaign. The table keeps only the most recent 10,000 events. Older rows move to the table's read-only archive,
-which the user opens with the View archive button at the bottom right of the table. The table and its per-campaign
+sequence writes to it, and each sequence also gets a view named `<sequence name> events` that is filtered to that
+sequence. The table keeps only the most recent 10,000 events. Older rows move to the table's read-only archive,
+which the user opens with the View archive button at the bottom right of the table. The table and its per-sequence
 views therefore show only recent events, and columns, exports, and automations on the table never see archived rows.
-For an older campaign's full history, point the user to the archive or the campaign's Activity tab, and use `clay
-campaigns analytics` for totals.
+For an older sequence's full history, point the user to the archive or the sequence's Activity tab, and use `clay
+sequences analytics` for totals.
 
 Events usually appear within a few minutes of happening. Replies from a mailbox the user connected themselves (rather
 than one bought in Clay) can be delayed or missing while that mailbox is disconnected.
@@ -27,7 +29,7 @@ Each row is one event. The raw payload is in the source column. Managed formula 
 
 | Column                 | Payload path                                | Notes                                                                  |
 | ---------------------- | ------------------------------------------- | ---------------------------------------------------------------------- |
-| `Campaign ID`          | `smartlead.campaign_id`                     | The email provider's campaign id, not the Clay campaign id             |
+| `Campaign ID`          | `smartlead.campaign_id`                     | The email provider's campaign id, not the Clay sequence id             |
 | `Event type`           | `event_type`                                | One of the types below                                                 |
 | `Lead ID`              | `smartlead.lead_id`                         | The email provider's lead id                                           |
 | `Audience ID`          | `lead.audience_entity_id`                   | Links to the Audiences contact; `Audience record` looks the contact up |
@@ -47,7 +49,7 @@ a different view to see them.
 - `event.occurred_at`: when the event happened at the provider (for example, the send, open, click, or reply time).
   Use this field for time, not the row's creation time. It can be missing.
 - `campaign.name`, `campaign.status`
-- `clay_campaign_id`: the Clay campaign id, when Clay could resolve it.
+- `clay_campaign_id`: the Clay sequence id, when Clay could resolve it.
 - `smartlead.campaign_id`, `smartlead.lead_id`, `smartlead.lead_map_id`: the email provider's ids.
 
 Every event type except `CAMPAIGN_STATUS_CHANGED` also has:
@@ -55,7 +57,7 @@ Every event type except `CAMPAIGN_STATUS_CHANGED` also has:
 - `lead.email`, `lead.name`, `lead.audience_entity_id`: the enrolled lead, using the address they were enrolled with.
   Use `lead.email` to identify the lead.
 - `sender.email`, `recipient.email`: the addresses as the email provider reported them.
-- `sent` (all of these except `LEAD_CATEGORY_UPDATED`): the campaign email the event relates to (`subject`, `html`,
+- `sent` (all of these except `LEAD_CATEGORY_UPDATED`): the sequence email the event relates to (`subject`, `html`,
   `text`, `sequence_number`, `stats_id`). `sequence_number` is the 1-based step in the sequence.
 
 ## Event types
@@ -65,7 +67,7 @@ Every event type except `CAMPAIGN_STATUS_CHANGED` also has:
 A sequence step was sent to the lead. `sender.email` is your sending mailbox, and `recipient.email` is the lead. After
 the final step is sent, the lead counts as completed.
 
-`sent.subject` and `sent.html` are the exact copy that went out. Copy edits on a live campaign apply only to leads
+`sent.subject` and `sent.html` are the exact copy that went out. Copy edits on a live sequence apply only to leads
 enrolled after the edit, so use this event to check what a particular lead received.
 
 ### `EMAIL_OPEN` and `EMAIL_LINK_CLICK`
@@ -73,9 +75,9 @@ enrolled after the edit, so use this event to check what a particular lead recei
 The lead opened the email (`engagement.opened_at`) or clicked a link (`engagement.clicked_at`,
 `engagement.clicked_links`).
 
-- These events only fire when open or click tracking is on. Plain-text campaigns always turn tracking off, so they
+- These events only fire when open or click tracking is on. Plain-text sequences always turn tracking off, so they
   never produce opens or clicks. If these events are missing, that does not mean nobody engaged.
-- Every repeat open or click is a separate event. Campaign analytics count each sent email at most once.
+- Every repeat open or click is a separate event. Sequence analytics count each sent email at most once.
 - Opens are unreliable: mail clients and security scanners can trigger them automatically.
 - These events never change a lead's status or stop a sequence.
 
@@ -92,9 +94,9 @@ The lead replied.
 - `reply.category_id` and `reply.category_name` hold the AI-assigned lead category, if there is one. `category_name`
   is filled only for the standard categories (listed below). A reply that is not categorized yet may be categorized
   later, which produces a `LEAD_CATEGORY_UPDATED` event.
-- `links.reply_url` opens this reply in the Campaigns inbox. It is present only when the provider sent both lead ids.
+- `links.reply_url` opens this reply in the Sequencer inbox. It is present only when the provider sent both lead ids.
 - A reply stops that lead's sequence and marks the lead as replied, unless the reply is out of office (see below). If
-  the campaign setting to pause other leads at the same domain on reply is on, those leads pause too.
+  the sequence setting to pause other leads at the same domain on reply is on, those leads pause too.
 - The table adds reply-only action columns:
   - `Get rep email` looks up the rep assigned to the mailbox in `sender.email` and returns `repEmail` and
     `repFullName`. It returns no data when no rep is assigned to that mailbox, or when `sender.email` is not one of
@@ -110,10 +112,10 @@ OOO is a reply category (`Out Of Office`, id 6), not a separate event type. An O
 `EMAIL_REPLY` with that category.
 
 - An OOO reply does **not** stop the sequence, mark the lead as replied, or count as a positive reply.
-- The campaign's Analytics page **does** count OOO replies in its Reply rate, which is all replies divided by emails
+- The sequence's Analytics page **does** count OOO replies in its Reply rate, which is all replies divided by emails
   sent. Replies count once per email answered, so two replies to one email count once. The Reply rate tooltip gives
   the count excluding OOO, and a separate Out of office card shows how many replies were OOO. Answer reply-rate
-  questions from these definitions, not from general sequencer conventions.
+  questions from these definitions, not from general email-sequencing conventions.
 - Leads auto-resume. When the OOO message says when the person will be back and the sequence has at least one step
   left, the sequence is held and resumes on that date. If the return date is more than 30 days away, the sequence
   ends for that lead instead. Clay does not log an event for the hold, the resume, or the end; the next sign of
@@ -133,13 +135,13 @@ The email bounced. The bounce message is in `bounce.html` and `bounce.text`, wit
   bounced. Suggest more copy variation (spintax, AI snippets, sender and lead variables) to reduce these.
 - `lead` can be missing on a bounce. Use `recipient.email` (the `Lead email address` column already falls back to
   it).
-- A high bounce rate on a campaign triggers an email alert to the campaign creator.
+- A high bounce rate on a sequence triggers an email alert to the sequence creator.
 
 ### `LEAD_UNSUBSCRIBED`
 
 The lead unsubscribed. They get no more emails, and the lead is marked unsubscribed.
 
-This event comes from the unsubscribe link, which only HTML campaigns with the link turned on include. A lead who
+This event comes from the unsubscribe link, which only HTML sequences with the link turned on include. A lead who
 replies asking to stop produces an `EMAIL_REPLY` instead; use `Add email to blocklist` for those.
 
 - `smartlead.lead_id` is usually empty on this event, so match the lead by `lead.email`.
@@ -159,8 +161,8 @@ The lead's category changed, either because the AI categorized a reply or becaus
 
 ### `CAMPAIGN_STATUS_CHANGED`
 
-The campaign's status changed: `status_change.previous_status` → `status_change.current_status`. The event has no
-lead fields. It is campaign-level, so filter it out when counting lead activity.
+The sequence's status changed: `status_change.previous_status` → `status_change.current_status`. The event has no
+lead fields. It is sequence-level, so filter it out when counting lead activity.
 
 ### `MANUAL_STEP_REACHED`
 
@@ -196,4 +198,4 @@ Custom categories also appear, by name, on `LEAD_CATEGORY_UPDATED`. On `EMAIL_RE
 - For "did they bounce", check `bounce.is_sender_originated_bounce` is `false` before treating the lead's address
   as bad.
 - The same event can occasionally arrive twice. When exact counts matter, de-duplicate on `event_type`, `lead.email`,
-  `sent.stats_id`, and `event.occurred_at`. For campaign totals, prefer `clay campaigns analytics`.
+  `sent.stats_id`, and `event.occurred_at`. For sequence totals, prefer `clay sequences analytics`.

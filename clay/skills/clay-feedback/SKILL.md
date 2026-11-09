@@ -1,10 +1,12 @@
 ---
 name: clay-feedback
 description: Clay feedback — send a bug report or product feedback to the Clay team via the `clay feedback` CLI.
-allowed-tools: Bash(clay *), Bash(rm *), Write, AskUserQuestion
+allowed-tools: Bash(clay *), AskUserQuestion
 ---
 
 # Clay Feedback
+
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
 
 Send feedback or a bug report to the Clay team using `clay feedback`. It reads the message from **stdin** and automatically attaches environment details.
 

@@ -6,12 +6,14 @@ allowed-tools: Bash(clay *), Bash(jq *), Read
 
 # Workflow snapshots & version history
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Snapshots are immutable, point-in-time captures of the entire workflow graph — nodes, edges, prompts, scripts, tools, and positions.
 
 ## Key concepts
 
 - **Automatic creation**: after every graph-mutating node edit
-  (`clay workflows nodes` create|update|delete; Sculptor: `edit_node`) and when a
+  (`clay workflows nodes` create|update|delete) and when a
   run starts. `data[0]` is newest-by-`createdAt`, **not** necessarily the current
   graph. Sharing/binding a trigger onto an existing node does **not** snapshot —
   undo that create by deleting the trigger, not restore. Settings-only trigger
@@ -38,7 +40,7 @@ Publishing marks a snapshot of the current draft as a numbered release; it does 
 
 ## CLI reference
 
-If `clay` isn't on PATH or `clay whoami` fails on auth, run the `setup` skill.
+For tool access or authentication problems, read the `clay` entry skill before continuing.
 
 ### List recent snapshots
 
@@ -148,7 +150,7 @@ the pre-edit graph.
 
 Trigger create only snapshots when it allocates a **new** canvas node. Sharing an existing
 `workflowNodeId` is not in the snapshot hash — undo that create with
-`clay workflows triggers delete` (Sculptor: surface delete), not restore. Settings-only
+`clay workflows triggers delete`, not restore. Settings-only
 trigger update/delete also are not snapshotted: revert or recreate the settings; do not
 delete the trigger and do not restore.
 
@@ -159,12 +161,10 @@ skipped — `.data[1]` may be an older unrelated snapshot; do not restore it. If
 had no prior snapshot, wait until the post-layout row has landed before treating
 `.data[1]` as the undo target.
 
-**Compare `snapshots get` vs the current graph** (`clay workflows graph get --mode full`;
-Sculptor: MCP `read` with `mode: "full"`) to tell current from newest-by-`createdAt`. If no
+**Compare `snapshots get` vs the current graph** (`clay workflows graph get --mode full`) to tell current from newest-by-`createdAt`. If no
 row matches, the post-edit snapshot may still be in flight — poll or restore `.data[0]`
-(step 4); do not search for a snapshot of the unsnapshotted current graph. Only use
-`Bash(clay *)` / `Bash(jq *)` — poll by repeating `list`, not a shell `for`/`seq`/`sleep`
-loop (those are outside this skill's `allowed-tools`).
+(step 4); do not search for a snapshot of the unsnapshotted current graph. Poll by repeating the snapshot list operation rather than running a shell
+`for`/`seq`/`sleep` loop.
 
 ```bash
 clay workflows snapshots list <workflowId> | jq -r '.data[0].id'   # newest — not always current

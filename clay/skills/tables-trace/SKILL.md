@@ -6,6 +6,8 @@ allowed-tools: Bash(clay *), Bash(jq *), Read
 
 # Trace a record
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 **Use when:** you have an identifier and want to find the record and see its overall state — "trace 12345", "where is jane@acme.com?", "what enrichments ran for this lead?", "is this record done?". This is a **locate + snapshot**: which table(s) hold it, and each cell's status. It does **not** explain _why_ a cell holds what it holds — that's `/tables-value-trace`.
 
 Treat each in-scope table independently. Tables may not share identifiers or have any relationship; presence (or absence) in one says nothing about another.

@@ -6,6 +6,8 @@ description: Use when the user asks a Clay product question — how a feature wo
 
 # Clay product documentation
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Clay's public documentation is the source of truth for product questions. Your training
 data about Clay is stale and incomplete: features ship weekly, integrations are added
 and renamed, and plans change. Answering a Clay product question from memory risks

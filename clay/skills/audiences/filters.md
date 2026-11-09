@@ -169,7 +169,7 @@ Swap `email` for any field id from `clay audiences fields list`, and swap the
 
 ## Query email, meeting, or other activities (ad hoc only)
 
-Read `clay audiences activities get` or `summary` to discover the returned
+Read `clay audiences activities list` or `summary` to discover the returned
 `activityTypeId`. It is distinct from the `activityType` enum (`email`, `meeting`,
 etc.); never substitute that enum or infer record ids from the opaque `eventId`.
 For distinct-account coverage, use `records search-ids` / `search-count --query`

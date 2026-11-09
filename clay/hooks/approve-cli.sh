@@ -106,7 +106,8 @@ esac
 #     outright -- we never vet the variable, so a prefix like `LD_PRELOAD=`,
 #     `CLAY_API_URL=`, or `CLAY_CONFIG_HOME=` must not ride in as a plain call;
 #   - at least one segment across all clauses must be `clay` (its own path/URL
-#     args are left alone), so the pipeline/chain stays anchored to a clay call
+#     args are left alone, except `--output`, which writes a file and must name a
+#     plain `.csv` file in cwd), so the pipeline/chain stays anchored to a clay call
 #     wherever it sits;
 #   - the `clay` segment's first non-flag word is refused if it is a
 #     credential/egress subcommand (feedback, login, logout, api-keys,
@@ -142,7 +143,11 @@ esac
 #     data -- JSON, a URL -- not a file read) but not from the unquoted
 #     shell-metachar guard. The `$`-reject guard above is what keeps remaining
 #     args literal -- otherwise `printf "$SECRET"` would expand an env var
-#     into clay's stdin under the echo/printf exemption.
+#     into clay's stdin under the echo/printf exemption;
+#   - a jq segment must not use the `env` builtin or load code the command
+#     text does not show (`import`, `include`, `--from-file`): jq reads the
+#     whole process environment through `env` with no `$`. Quotes are
+#     removed before this check, so `e''nv` cannot hide the word.
 # Residual, knowingly accepted for `|` only: bare cwd-relative names (e.g.
 # `cat .env | clay`) aren't caught; since no allowlisted helper can reach the
 # network or redirect, such a read stays in the agent's context and still can't
@@ -209,6 +214,27 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
     }
     return 0
   }
+  # Accepts only a plain cwd file name, optionally wrapped in one pair of quotes,
+  # so `--output` cannot replace a dot file or a file outside cwd.
+  function is_cwd_csv(v,    q) {
+    q = substr(v, 1, 1)
+    if ((q == "\"" || q == sq) && length(v) >= 2 && substr(v, length(v), 1) == q) {
+      v = substr(v, 2, length(v) - 2)
+    }
+    return v ~ /^[A-Za-z0-9_][A-Za-z0-9._-]*\.csv$/
+  }
+  function has_unsafe_output(w, m,    j, f) {
+    for (j = 1; j <= m; j++) {
+      f = dequote_word(w[j])
+      if (f == "--output") {
+        if (j == m || !is_cwd_csv(w[j + 1])) return 1
+        j++
+      } else if (substr(f, 1, 9) == "--output=") {
+        if (!is_cwd_csv(substr(w[j], index(w[j], "=") + 1))) return 1
+      }
+    }
+    return 0
+  }
   # Dequote each token before option classification and prefix/subcommand gates.
   function check_clay(t,    rest, m, w, j, sc, words, nw, e, pfx_match) {
     # Same policy as helpers: unquoted shell metachars (* ? [ ] ~ { } ( ), or
@@ -219,6 +245,7 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
     rest = t
     sub(/^clay([ \t]+|$)/, "", rest)
     m = split(rest, w, /[ \t]+/)
+    if (has_unsafe_output(w, m)) return 0
     sc = ""
     nw = 0
     for (j = 1; j <= m; j++) {
@@ -242,6 +269,14 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
     if (sc in D) return 0
     return 1
   }
+  function jq_reaches_env(t,    u) {
+    u = t
+    gsub(/"/, "", u)
+    gsub(sq, "", u)
+    if (u ~ /(^|[^A-Za-z0-9_.])(env|import|include)([^A-Za-z0-9_]|$)/) return 1
+    if (u ~ /(^|[ \t])--from-file([ \t]|=|$)/) return 1
+    return 0
+  }
   function check_helper(t, tok, pipe_ok,    allow) {
     if (pipe_ok) {
       if (!(tok in H)) return 0
@@ -255,6 +290,7 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
     # into a cwd listing under auto-approve; mid-word = and bare @ are
     # allowed.
     if (allow && has_unquoted_shell_metachar(t)) return 0
+    if (allow && tok == "jq" && jq_reaches_env(t)) return 0
     if (allow && tok != "echo" && tok != "printf") {
       if (index(t, "/") > 0) return 0
       if (index(t, "~") > 0) return 0

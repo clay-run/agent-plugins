@@ -5,6 +5,17 @@ description: Clay workflows — plan, review, build, and edit automations with t
 
 # Building Clay workflows with the CLI
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
+When the conversation includes selected workflow nodes from a widget, read the
+current authoritative workflow graph before editing. Reconcile the workflow and
+workspace IDs, revision, and selected node IDs; names and selection order do not
+identify a connection. For “between these”, use the directed edge identity and
+branch/source index. A unique direct connection is straightforward. Ask a focused
+question for multiple edges or paths, disconnected or deleted nodes, or incomplete
+topology. A truncated preview cannot establish that no other path exists. Never
+infer configuration or execution inputs from the display-only context.
+
 Supporting files in this directory: `publishing.md`, `testing.md`, `data-passing.md`,
 `presenting.md`, `audiences.md`, `account-agents.md`, `run-analysis.md`, `node-groups.md`,
 `csv-triggers.md`, `table-primitives.md`, `table-waterfalls.md`, `industry-mapping.md`.
@@ -82,9 +93,11 @@ Common node types (not just agent/tool — pick the type that fits the step):
     separate calls can persist a blank prompt. Omit `agentModel` to use the workspace default
     (Auto where enabled), or set it to the specific model the user requests. One exception: a node
     you are about to make an account agent is created bare — see account agents below.
-  - **Reuse:** `clay claygents list --search <text>` (read one with `clay claygents get <id>`),
-    then send only `agentClaygentId` (the returned `id`). Do not send `agentName` / prompt / model — `agentName` can rewrite that
-    shared prompt.
+  - **Reuse:** `clay claygents list --search <text>` returns regular Claygents (`agentType: null`)
+    and account agents (`agentType: "account"`). Read regular Claygents with `clay claygents get <id>`.
+    Send only `agentClaygentId` (the returned `id`) to attach either kind, then inspect the linked
+    agent with `clay workflows nodes get <workflowId> <nodeId>`. Do not send `agentName` / prompt / model — `agentName` can rewrite that
+    shared prompt. For account agents, follow `account-agents.md` for selection and input wiring.
 - **Tool nodes** (`nodeType: "tool"`) — run a single Clay action or Clay function. (UI may
   label these "Enrich" or "Function".) `tools` may be omitted while drawing an outline; before
   validate/test/publish, set exactly one `tools` entry — either
@@ -92,6 +105,10 @@ Common node types (not just agent/tool — pick the type that fits the step):
   or `{ "toolType": "clay_function", "tableId": "<functionId>" }` for a Clay function subroutine.
   Both come from `clay workflows actions list`. For the input shape, pass an action's ids to
   `clay workflows actions schema` or a function's id to `clay functions get`.
+- **Message nodes** (`nodeType: "tool"` with `message`) — a message template with input variables
+  and optional AI-written text. See "Message nodes" below.
+- **Rep task nodes** (`nodeType: "tool"` with `repTask`) — create a task in Reps for a rep to work,
+  such as an email to review and send. See "Rep task nodes" below.
 - **Conditional nodes** (`nodeType: "conditional"`) — pick exactly one outgoing branch
   (`rules` / `agentic` / `code` via `conditionalMode`).
 - **Code nodes** (`nodeType: "code"`) — deterministic Python transforms (no LLM), for shaping
@@ -102,7 +119,9 @@ Common node types (not just agent/tool — pick the type that fits the step):
   processes, threads, files, or time zone data are unavailable (`socket`, `http`,
   `urllib.request`, `subprocess`, `threading`, `asyncio`, `logging`, `pathlib`, `zoneinfo`). Use
   `print()` instead of `logging`, and a fixed UTC offset instead of `zoneinfo`. Prefer
-  `clay workflows code test` before wiring.
+  `clay workflows code test` before wiring. Wire inputs and outputs as `data-passing.md`
+  Method 3 describes: named outputs, with inputs pinned from the node that produced them, not a
+  state object passed from code node to code node.
 - **Merge nodes** (`nodeType: "merge"`) — coalesce ordered candidate values into named outputs
   for downstream reuse. Prefer these when branch convergence or fallback selection is only
   coalescing; use a code node when computation or a non-trivial transformation is also needed.
@@ -274,6 +293,132 @@ the destination with the matching `transitionId`:
 For agentic and code conditionals, create placeholder destinations first, create the conditional
 with stable route/transition ids, then attach each destination with the matching edge id.
 
+### Message nodes
+
+A Message node (`nodeType: "tool"` with `message`) writes a message, such as an email or LinkedIn
+note, from fixed text, `{{input}}` variables and optional AI text written at run time. Use a Claygent
+node instead when the whole message needs research or tools: a Message node's AI text sees only its
+instructions, the node's inputs and the previous messages it includes.
+
+Declare every variable in `inputSchema`, wired with `sourceNodeId`/`sourcePath`, in the same call:
+
+```json
+{
+  "name": "Intro email",
+  "nodeType": "tool",
+  "inputSchema": {
+    "company": {
+      "type": "string",
+      "sourceNodeId": "wfn_lead",
+      "sourcePath": "$.result.company"
+    }
+  },
+  "message": {
+    "subject": "Quick idea for {{company}}",
+    "body": "Hi team,\n\n{{ai:opener}}\n\nWorth a quick chat?",
+    "aiText": {
+      "opener": {
+        "label": "Opener",
+        "instructions": "One sentence on why **{{company}}** came to mind."
+      }
+    }
+  },
+  "incomingEdges": [{ "sourceNode": "wfn_lead" }]
+}
+```
+
+`body` is Markdown, except:
+
+- Each line is a line of the message and an empty line is a blank line, so use `\n\n` only for a
+  gap. `<br>`, or `\` ending a line that another line follows, breaks a line inside a paragraph.
+- Supported: `**bold**`, `_italic_`, `<u>underline</u>`, `[label](https://…)` links, and `- ` /
+  `1. ` lists (indent to nest). Headings, quotes, code and other HTML are rejected.
+- `{{ai:<id>}}` is AI text; give its `label` and `instructions` (Markdown, may use variables) under
+  `aiText.<id>`, and keep the ids you read back. Write a literal `{` or `}` as `\{` or `\}`.
+- `subject` is one line of plain text with variables and AI text, or `null` for none.
+
+An update replaces `subject`, `body` and `aiText` together, so read the node first.
+`previousMessageNodeIds` lists upstream Message nodes the AI text may read (omit to keep them, `[]`
+to clear). Outputs: `$.result.subject`, `$.result.bodyMarkdown`, `$.result.bodyHtml` and
+`$.result.bodyPlainText`. Message nodes have no list mode. If creation is rejected because message
+nodes are not enabled, use a Claygent node.
+
+### Rep task nodes
+
+A rep task node (`nodeType: "tool"` with `repTask`) creates a task in Reps for a rep to work, and the
+run continues without waiting for it. `repTask.taskType` picks the kind of task:
+
+- `"email"` (the default): a drafted email that the rep reviews and sends. Clay does not send it.
+- `"call"`: a call the rep places from their task list and logs.
+
+Its inputs have fixed names. Declare the ones you use in `inputSchema`, wired with
+`sourceNodeId`/`sourcePath`:
+
+- Email: `recipient_email` and `body_text` (plain text) are required; `subject` and `body_html` are
+  optional.
+- Call: `phone_number` (E.164, such as `+14155550134`; spaces, dashes and brackets are ignored) and
+  `title` are required; `talk_track` is optional.
+- `assignee` when `repTask.assignee` is `{ "type": "input" }`: a Clay user ID or a member's email.
+- `due` when `repTask.due` reads an input: an amount for `after_input`, or an ISO date
+  (`YYYY-MM-DD`) or date-time for `at_input`.
+
+```json
+{
+  "name": "Rep follow-up",
+  "nodeType": "tool",
+  "inputSchema": {
+    "recipient_email": {
+      "type": "string",
+      "sourceNodeId": "wfn_lead",
+      "sourcePath": "$.result.email"
+    },
+    "subject": {
+      "type": "string",
+      "sourceNodeId": "wfn_intro_email",
+      "sourcePath": "$.result.subject"
+    },
+    "body_text": {
+      "type": "string",
+      "sourceNodeId": "wfn_intro_email",
+      "sourcePath": "$.result.bodyPlainText"
+    },
+    "body_html": {
+      "type": "string",
+      "sourceNodeId": "wfn_intro_email",
+      "sourcePath": "$.result.bodyHtml"
+    },
+    "assignee": {
+      "type": "string",
+      "sourceNodeId": "wfn_route",
+      "sourcePath": "$.result.assigned_rep.clay_user_id"
+    }
+  },
+  "repTask": {
+    "assignee": { "type": "input" },
+    "due": { "kind": "after", "amount": 2, "unit": "days" }
+  },
+  "incomingEdges": [{ "sourceNode": "wfn_route" }]
+}
+```
+
+- `assignee` is `{ "type": "user", "userId": <Clay user id> }` for one member, or `{ "type": "input" }`
+  to read it per run, for example from the rep routing action's `$.result.assigned_rep.clay_user_id`.
+  Viewers can't be assigned tasks.
+- `due` is `null` for no due date, or one of:
+  - `{ "kind": "after", "amount": 2, "unit": "days" }`: units are minutes, hours, days or weeks,
+    as elapsed time.
+  - `{ "kind": "after_input", "unit": "hours" }`: the amount comes from the `due` input.
+  - `{ "kind": "until", "until": … }`: the next matching day and time, in the same shape as a
+    delay node's `delayUntil`.
+  - `{ "kind": "at_input" }`: the time comes from the `due` input, as an ISO 8601 date or date-time.
+- Each `repTask` write replaces `assignee` and `due`; omit `priority` to keep it, and omit `taskType` to
+  keep the node's type. `mode` follows the type and can be left out.
+
+A run creates one task per node visit, and a rerun creates another. Rep task nodes have no list mode.
+Outputs: `$.result.taskId`, `$.result.status`, `$.result.created`, `$.result.assigneeUserId` and
+`$.result.dueAt`. If creation is rejected because rep task nodes are not enabled, tell the user;
+there is no substitute.
+
 ### Triggers, audiences, and draft vs live
 
 **Triggers** start a workflow (signals, audience segments, schedules, webhooks, Clay tables, CSV
@@ -282,9 +427,12 @@ triggers remain UI-only. A Find leads trigger (`triggerType: "action_source_sche
 Clay search and starts one run per record it finds; if a Find leads skill (`workflows-find-leads`)
 is in your catalog, follow it for the `dataSource` shape and how to run the trigger.
 
-**Running a workflow from a CSV** (upload a file, one run per row): the `clay workflows triggers
-csv` commands — including attaching a CSV the user dropped in chat (at
-`/mnt/session/uploads/<filename>`). See `csv-triggers.md`.
+**Running a workflow from a CSV** (one run per row): a CSV trigger keeps the file linked to the
+trigger node, so the same rows can be run again later. Use the `clay workflows triggers csv`
+commands, including for a CSV the user dropped in chat (at `/mnt/session/uploads/<filename>`).
+See `csv-triggers.md`. For an ad-hoc run over a CSV's rows, run the workflow as a routine
+instead. A routine needs a manual trigger whose inputs match the CSV headers, so add one if the
+workflow lacks it (see "Running a workflow as a routine" below).
 
 **Choose the trigger from context.** When the choice is clear and the user requested
 a draft, create it without asking for confirmation again. When signals, segments, or other sources could
@@ -322,7 +470,7 @@ don't guess at flags.
 - Update name: `clay workflows update <workflowId> --name "New name"` — returns the updated
   workflow.
 - Delete: `clay workflows delete <workflowId>` — admin-only, deletes the workflow and its triggers,
-  and cannot be undone from the CLI. Run it only when the user explicitly asks to delete the
+  and has no undo operation. Run it only when the user explicitly asks to delete the
   workflow. A repeated delete returns `not_found` rather than succeeding again.
 
 ### Reading a workflow
@@ -406,6 +554,24 @@ for the user before changing them.
   `estimatedCredits` with the user. The estimate is approximate; see `testing.md` for when it
   runs low. See "Recovering failed runs" in `testing.md`.
 
+### Running a workflow as a routine
+
+Register a workflow as a routine when the user wants to run it on demand over records they
+supply (CSV rows, a pasted list) or call it from Clay MCP or the API. An unregistered workflow
+isn't visible there:
+
+```bash
+clay routines create workflow <workflowId> --name "<what it does, e.g. Route inbound leads>"
+```
+
+- The routine's inputs are the workflow's manual trigger `inputSchema`, so the workflow needs a
+  manual trigger, and its property names are the keys each run item must use.
+- Keep those properties to `string`, `number`, `integer`, or `boolean`. A routine with any
+  other input type is hidden from Clay MCP.
+- Name it for its use case. Agents choose routines by name and description.
+
+Then run it with `clay routines runs start` (see `routines`).
+
 ### Testing actions and code
 
 - `clay workflows actions test <packageId> <actionKey> [--inputs <json|file|->]` — consumes
@@ -421,17 +587,15 @@ for the user before changing them.
   `context.get_input("email")`; `get_input()` requires a key and has no zero-argument form. The
   same limits as code nodes apply: standard library only (without the modules listed under code
   nodes), no network, 1 second. **Before saving code with declared outputs, pass
-  `--output-schema` with the `outputSchema` you will save on the node — flat fields, or the
-  JSON Schema `nodes get` returns when the installed CLI's `--output-schema` help mentions JSON
-  Schema; older CLIs take only the flat map — when the installed CLI offers that flag.** Check `clay workflows code test --help`;
-  if the flag is unavailable, test the saved node with `clay workflows nodes test` instead until the
-  CLI is updated. Without the flag, success only means execution succeeded. Exits 0 even on handler
+  `--output-schema` with the `outputSchema` you will save on the node — flat fields or the
+  JSON Schema returned by `nodes get`.**
+  If output-schema validation is unavailable, test the saved node with `clay workflows nodes test` instead.
+  Without output-schema validation, success only means execution succeeded. Exits 0 even on handler
   or schema failure — require `.isError != true and .outputSchemaValidated == true` for a schema
   test.
 
 Both are single-shot previews. External CLI users have per-user daily caps (defaults ~25 action
-tests and ~10 code tests, overridable per workspace). Clay's global agent and Workflows
-Sculptor are exempt.
+tests and ~10 code tests, overridable per workspace). Clay's hosted agents are exempt.
 Use them to confirm an input/output shape,
 never to enrich or process a batch of records: for that use a managed routine
 (`clay routines runs start`), a table column, or a workflow node, none of which are subject to

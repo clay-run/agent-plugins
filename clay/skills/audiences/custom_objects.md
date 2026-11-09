@@ -70,11 +70,13 @@ workaround.
 | `audiences fields create/update/delete` | No — deals are read-only                            |
 | `audiences fields segments`             | No — accepts only people/company field types        |
 | `audiences list` / `create`             | No — audiences exist over people and companies only |
-| `audiences signals get --entity-id`     | No — accepts only people/company records            |
+| `audiences signals list --entity-id`    | No — accepts only people/company records            |
 
-Passing `--entity-type deals` to any of the "No" rows exits 2 with
-`validation_error` and `must be one of: people, companies.` That is the expected
-answer, not a bug to retry or work around.
+Passing `--entity-type deals` to a "No" row exits 2 with `validation_error`.
+`signals list --entity-id` forwards the type to the API and returns the API's
+validation message. The other "No" rows reject it locally with
+`must be one of: people, companies.` These errors are expected; do not retry or
+work around them.
 Use the exact plural `deals`; singular `deal` is invalid on every command.
 
 ```bash

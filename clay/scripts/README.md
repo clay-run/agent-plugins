@@ -12,7 +12,7 @@ their own `clay update` command only when below the minimum, including installat
 outside PATH. The resulting version must meet the minimum. No sudo is used. Existing
 npm installations are updated through npm.
 Unrecognized files are not overwritten. Credentials and configuration are untouched.
-The installer reports PATH changes needed; the setup skill owns persistent shell
+The installer reports PATH changes needed; the CLI setup skill owns persistent shell
 configuration and verifies the command from the agent's shell.
 
 Tests run in the CLI Jest suite with isolated homes and mocked download/package

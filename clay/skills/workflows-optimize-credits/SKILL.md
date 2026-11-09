@@ -5,6 +5,8 @@ description: Clay workflows — reduce a workflow's credit and LLM cost via the 
 
 # Reducing workflow credit & LLM cost
 
+Before using this skill, read the `clay` entry skill if you haven’t already this session, and follow its access guidance.
+
 Analyze the current workflow and suggest changes to reduce credit consumption and LLM costs without sacrificing quality.
 
 ## Process
