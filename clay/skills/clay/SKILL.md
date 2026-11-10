@@ -53,26 +53,29 @@ Whatever you're doing in Clay, work transparently so the user can follow along:
   returns `not_found` or `auth_forbidden`, do not retry through another path. If context is empty
   or unavailable, use what the user supplied and ask for missing criteria when needed.
 
-- **Review Knowledge Hub proposals before deciding.** Workspace admins can use
-  `clay knowledge-hub business-context propose`, then `suggestions list` and
-  `suggestions get <id>` under the same business-context group. Render `changes[]`
-  conversationally; show `.patch` only for literal-diff requests or plain terminals.
-  Refer to suggestions by title; IDs and revisions are for commands, not for display.
-  Offer the review. In an external terminal, wait for an explicit accept or reject decision,
-  then execute it without a second approval request. In managed Clay sessions requiring
-  approval, use the approval request as the single confirmation instead of asking for a
-  separate chat decision. If managed permissions allow immediate execution, wait for an
-  explicit chat decision first. Requesting a
-  proposal does not authorize acceptance. Use `suggestions accept <id> --review-revision <rev>`
-  with the exact revision the user reviewed, or `suggestions reject <id> --reason "..."`.
-  If acceptance conflicts, review again and obtain a fresh decision. A stale proposal
-  requires a new proposal. To revise, propose a replacement and reject the old one.
-  New proposals require fewer than 5 open suggestions in the workspace. At the limit,
-  help the user review and accept or reject existing suggestions before proposing another;
-  never dismiss suggestions without their decision. Retrying the same proposal is allowed.
-  Follow `nextStep` on proposal retries: report an already-decided result without
-  offering it for review. Stop on `auth_forbidden`; workspace admin rights are required
-  for proposing and deciding. Do not report changes as applied until acceptance succeeds.
+- **Review Knowledge Hub proposals before deciding.** Workspace admins can propose with
+  `clay knowledge-hub business-context propose` and review with
+  `clay knowledge-hub business-context suggestions list` or
+  `clay knowledge-hub business-context suggestions get <id>`.
+  Explain `changes[]` conversationally; show `.patch` only for literal-diff requests or plain terminals.
+  Refer to suggestions by title; IDs and revisions are for commands.
+  In external terminals or managed sessions without approval enforcement, wait for an explicit user
+  decision, then execute without a second confirmation. When managed approval is required, use that
+  approval request as the single confirmation. Proposing does not authorize acceptance.
+  Accept with `clay knowledge-hub business-context suggestions accept <id> --review-revision <rev>`
+  using the exact revision reviewed. Reject with `clay knowledge-hub business-context suggestions reject <id>`;
+  `--reason "..."` is optional. On acceptance conflict, review again and obtain a fresh decision.
+  A stale proposal requires a new proposal.
+  To revise your own open or stale proposal, reject that specific ID successfully before proposing
+  the full revision with a new `--request-id`. The revision request
+  authorizes withdrawing that draft; managed approval requirements still apply.
+  Do not choose a suggestion just because it is the most recent, or dismiss others to make room.
+  New proposals require fewer than 5 open suggestions. At the limit, help the user review and decide
+  existing suggestions; dismiss only the draft being revised or suggestions the user explicitly rejects.
+  Reuse request IDs only for retries: they return the original suggestion even if the input changes.
+  Follow `nextStep` on retries; report saved decisions without offering them for review again.
+  Stop on `auth_forbidden`; proposing and deciding require workspace admin access.
+  Report changes as applied only after acceptance succeeds.
 
 ## CLI readiness in external agents
 
@@ -195,6 +198,7 @@ question about the rest.
 | `sequences`           | Creating and improving outbound email sequences (formerly campaigns), sequence copy, variants, and analytics.                                                                                                                                                                                                                  |
 | `ad-syncs`            | Pushing an audience segment to ad platforms as a custom audience, and checking a sync's status, match rate, or run history.                                                                                                                                                                                                    |
 | `searches`            | Finding net-new people or companies in Clay's GTM database — prospects and accounts that aren't already in the workspace.                                                                                                                                                                                                      |
+| `searches-advanced`   | Geography, industry, growth, employer history, audiences, counts and other advanced search criteria; full reference and quota/error handling.                                                                                                                                                                                  |
 | `routines`            | Creating a routine from an existing function/workflow, running a saved routine, and fetching its results.                                                                                                                                                                                                                      |
 | `tables-cli`          | Reading, querying, and exporting data from an existing Clay table via the CLI (creating tables is not supported).                                                                                                                                                                                                              |
 | `cli`                 | Ephemeral, programmatic access to Clay capabilities from a shell — run a routine, query a table, search, etc.                                                                                                                                                                                                                  |

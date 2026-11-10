@@ -1,6 +1,6 @@
 ---
 name: workflows
-description: Clay workflows — plan, review, build, and edit automations with the Clay CLI. Use when planning or working on a Clay workflow.
+description: Clay workflows — plan, review, build, and edit automations with the Clay CLI. Use when planning or working on a Clay workflow, including putting one on a schedule or pausing its schedule.
 ---
 
 # Building Clay workflows with the CLI
@@ -356,8 +356,9 @@ Its inputs have fixed names. Declare the ones you use in `inputSchema`, wired wi
 
 - Email: `recipient_email` and `body_text` (plain text) are required; `subject` and `body_html` are
   optional.
-- Call: `phone_number` (E.164, such as `+14155550134`; spaces, dashes and brackets are ignored) and
-  `title` are required; `talk_track` is optional.
+- Call: `phone_number` (a real number starting with `+` and its country code, such as `+14155550134`;
+  spaces, dashes and brackets are fine, extensions are not) and `title` are required; `talk_track` is
+  optional.
 - `assignee` when `repTask.assignee` is `{ "type": "input" }`: a Clay user ID or a member's email.
 - `due` when `repTask.due` reads an input: an amount for `after_input`, or an ISO date
   (`YYYY-MM-DD`) or date-time for `at_input`.

@@ -1,6 +1,6 @@
 ---
 name: schedules
-description: 'Clay agent schedules — recurring prompts the Clay agent runs on a cadence, each occurrence starting a fresh agent task. Use for any request to do something on a schedule or recurring cadence: a daily digest, a weekly report, checking or changing when a scheduled run happens next, pausing or deleting one.'
+description: 'Clay agent schedules — recurring prompts the Clay agent runs on a cadence, each occurrence starting a fresh agent task. Use for recurring work that needs the agent''s reasoning on every run: a daily digest, a weekly report, checking or changing when a scheduled run happens next, pausing or deleting one. Running a workflow on a schedule is a scheduled trigger on that workflow (the workflows skill), not an agent schedule.'
 ---
 
 # Clay agent schedules
@@ -12,6 +12,30 @@ agent task** with the schedule's `prompt` as its first message, run as the
 schedule's creator. Nothing carries over between occurrences — no conversation,
 no working files — so a schedule prompt must stand alone: name the audience,
 table, or workflow it works on explicitly, and say what the output should be.
+
+## Schedule or scheduled workflow?
+
+Schedules are for recurring work that needs reasoning. Decide before creating one:
+
+- **Scheduling a workflow** — the one open on screen, one you built or edited in this
+  conversation, or one the user names — is a scheduled trigger on that workflow, published (see
+  `/workflows`), not a schedule. Pausing, resuming, or changing it later is
+  `clay workflows triggers update`, not `clay schedules`.
+- **Fixed steps** — finding leads, enriching, qualifying, routing, writing back — go in a
+  workflow on a scheduled trigger, not a schedule. Per-record judgment is an agent node in that
+  workflow. "Find me 100 leads every 2 weeks and qualify them" is a workflow on a biweekly
+  schedule with a qualification node.
+- **Reasoning about each run's results** — analysing them, deciding what to do next, tracking a
+  goal, a digest that interprets what changed — needs a schedule. If it wraps fixed steps, keep
+  those in a workflow with no schedule of its own and have the schedule's prompt start it by
+  workflow id, plus trigger id for a source trigger. Scheduling both runs the work twice.
+
+Schedules run at most daily; workflows can run every minute. If it is unclear whether runs need
+judgment, ask the user rather than defaulting to either.
+
+"The schedule" can mean a schedule or a workflow's scheduled trigger. When a request to pause,
+change, or delete one could mean either, as in a scheduled task whose workflow also runs on a
+schedule, ask which one the user means before changing anything.
 
 ## The commands
 
