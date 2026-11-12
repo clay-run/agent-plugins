@@ -134,11 +134,15 @@ Follow the `workflows` skill's `audiences.md` for the complete mapping shape. In
   for generic or net-new audience upserts where an existing audience record id is unavailable
 - include every destination id in `recordFields|selectedRecordFields` and provide its matching
   `recordFields|<id>` binding
-- set `recordFields|removeNullValues` to `true` unless the user explicitly wants blanks to clear
-  existing values
+- when the user wants a field cleared, set
+  `recordFields|writeMode|<id>` to the static value `always_write_including_blanks` and map that
+  field to an upstream value; `null`, `""`, or a missing value clears it only when explicit Audiences clears
+  are enabled for the workspace (`enable-audiences-clear-field-command`)
 - bind enrichment outputs from their declared `$.result.<outputPath>` paths; never invent paths
 
-Read the writeback node again after updating it and confirm the mappings persisted.
+Read the writeback node again after updating it and confirm the mappings persisted. If explicit-clear
+availability is unknown, do not promise a clear. After execution, read the record back before reporting
+success; a successful step alone does not prove the field cleared.
 
 ## Validate, test, and publish
 

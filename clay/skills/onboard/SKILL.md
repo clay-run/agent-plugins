@@ -1,7 +1,7 @@
 ---
 name: onboard
 description: Clay first-run onboarding — banner, what Clay can do, and starter tasks served by the Clay API. Run this right after a sign-in that just happened — from `clay login` directly, or invoked by the CLI setup skill after its sign-in step. It checks server-side whether this user has been onboarded and stands down if so. Assumes the CLI is already signed in; for access or authentication problems, consult the clay entry skill first.
-allowed-tools: Bash, Read
+allowed-tools: Bash(clay whoami), Bash(clay onboard *), Bash(command -v jq), Bash(printf '%s\n' "${COLUMNS:-0}"), Read
 ---
 
 # Clay onboarding

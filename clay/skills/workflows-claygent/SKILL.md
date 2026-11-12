@@ -1,6 +1,6 @@
 ---
 name: workflows-claygent
-description: Build and run Claygent agent nodes in Clay workflows. Use when the user asks for custom LLM research, reasoning, classification, drafting, or summarization over records; when no existing routine fits a Claygent task; or when creating or editing a workflow `agent` node.
+description: Build and run Claygent agent nodes in Clay workflows. Use when the user asks for custom LLM research, reasoning, open-ended classification that needs research, drafting, or summarization over records; when no existing routine fits a Claygent task; or when creating or editing a workflow `agent` node.
 ---
 
 # Claygents in workflows
@@ -10,6 +10,10 @@ Before using this skill, read the `clay` entry skill if you haven’t already th
 A Claygent in a workflow is a dedicated `nodeType: "agent"` node. It is not a Clay action
 or function, so its absence from `clay workflows actions list` does not make Claygent
 unavailable. Use `/workflows-discover-actions` only for tool nodes.
+
+To sort each record into one of a fixed set of categories from data the workflow already has, or
+when the user asks for Jev, use a Classify step instead: a Use AI tool node whose inputs are listed
+in `clay workflows nodes insert --help`. Jev is a Classify model, not a Claygent model.
 
 If an existing routine already performs the requested task, use the `/routines` skill.
 Otherwise build the Claygent workflow here. Read the main `/workflows` skill for graph,

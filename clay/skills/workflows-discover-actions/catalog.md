@@ -9,9 +9,14 @@ workflow building blocks, use `clay workflows actions`.
 
 The actions catalog only discovers tool and function nodes. Claygents are dedicated
 workflow nodes and do not need to appear in this catalog. When a step needs custom LLM
-reasoning, research, drafting, summarization, or classification, use the
+reasoning, research, drafting, or summarization, use the
 `/workflows-claygent` skill instead of treating an absent Claygent action as an unavailable
 capability.
+
+The catalog also hides Use AI, which backs the Classify step. When a step sorts each record into
+one of a fixed set of categories, or the user asks for Jev, insert a Classify step as described in
+`clay workflows nodes insert --help` instead of a Claygent. Jev (`jev-1.13.0`) is a Classify
+model only; never set it as a Claygent's `agentModel`.
 
 ## Actions catalog
 

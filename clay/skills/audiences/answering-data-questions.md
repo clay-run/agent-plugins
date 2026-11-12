@@ -146,3 +146,13 @@ Each of these showed up in a real session and cost 10-45 seconds for nothing:
 - **Paging `search-ids` to count records.** `search-count` answers "how many" in
   one call; a paging loop over `search-ids` spends many calls — plus the
   rate-limited retries it runs into — for the same number.
+
+## Workspace field fill rates
+
+For a people or company field coverage audit, use
+`clay audiences fields list --entity-type people --include-fill-rates` (or `companies`).
+This returns coverage for all listed fields together; do not issue a count query per field.
+`fillRate` contains `percentage` (0–100), `recordsCovered`, and `totalRecords`.
+A null `fillRate` means coverage is unavailable, not that the field is empty.
+`fillRatesStale` indicates cached coverage awaiting refresh. Coverage alone does not
+establish that a field is safe to delete; check dependencies before proposing deletion.

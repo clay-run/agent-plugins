@@ -6,9 +6,17 @@ Some workspaces have **account agents** — Claygents whose model and input vari
 
 When creating an agent node in a workflow whose upstream trigger is an audiences trigger (people or companies), reason about whether the task benefits from account context — research, enrichment, scoring, qualification, and personalized outreach all do, so **most of the time the answer is yes: default to making it an account agent**, which gets access to the account's audience data. Decide yourself; the user does not have to ask. Keep a regular Claygent when the node's task only transforms data already produced upstream — pure text synthesis, formatting, or summarization of other nodes' outputs — since account context adds nothing there. Always honor an explicit user request in either direction.
 
+**Send public web research to a regular Claygent.** An account agent created from a workflow has web search off, and a workflow cannot turn it on (see "Web search"). Before choosing the agent type, check whether any task needs public information the audience does not hold: a person's background or current role, company news or funding, a website, public profiles.
+
+- If the step is only web research, use a regular Claygent (see the `workflows-claygent` skill). Regular Claygents search the web by default.
+- If the step needs the account's private context (deals, calls, emails, contacts) and web research, use two nodes. The account agent extracts what the research needs from the audience, such as the attendee's name, title, and company or the deal context. A regular Claygent downstream does the web research and combines it with those outputs. The Claygent does not see the account's audience data, so pass it every value it needs through its inputs (see `data-passing.md`).
+- An existing account agent whose `agentInternetSearchEnabled` is `true` can do both itself.
+
+When you split a step, tell the user in one line why, and that turning on web search for the account agent in the account agent builder is the alternative if they prefer a single agent. Never write a prompt that asks an account agent to search the web when its web search is off.
+
 **Plan around what the agent already sees.** An account agent reads the account's audience data directly: the account's fields, its contacts, opportunities, synced conversations (emails, calls), and signals — plus internet search when enabled. Do not add lookup or enrichment action nodes to fetch data the audience already holds: "pick the best contact", "summarize open opportunities", or "reference the latest call" are things the agent does from its own context, so a people-search action feeding it contacts is redundant. Before outlining a prospecting or enrichment step (find contacts, find work email), check whether the audience already has that data for these accounts (see the `audiences` skill) or ask the user; add those nodes only when the audience genuinely lacks the records — the agent cannot invent contacts that are not in the audience. Deterministic integration steps (sequencing a lead, updating a CRM, a specific provider waterfall) stay as tool nodes; do not fold those into the agent.
 
-**Prefer one agent with multiple tasks over a chain of agents.** An account agent's output schema is a task list, and one run computes every task over the same account context — so related outputs belong on one node (e.g. `best_contact` and `outreach_message` on a single agent, not two). Split into separate account agents only when a non-agent step must run between them because its output feeds the second agent, when the responsibilities are genuinely unrelated, or when a single prompt would become overloaded trying to cover them all.
+**Prefer one agent with multiple tasks over a chain of agents.** An account agent's output schema is a task list, and one run computes every task over the same account context — so related outputs belong on one node (e.g. `best_contact` and `outreach_message` on a single agent, not two). Split into separate account agents only when a non-agent step must run between them because its output feeds the second agent, when the responsibilities are genuinely unrelated, or when a single prompt would become overloaded trying to cover them all. Web research is the exception that splits off to a regular Claygent, as described above.
 
 The flow for a **new** step: create the agent node bare (name, `incomingEdges`, no agent fields), run `clay workflows nodes create-account-agent` on it, then set the prompt and tasks on the linked node (see "Edit its prompt and tasks"). Do not create a throwaway regular Claygent just to upgrade it. The upgrade command exists for a node **already backed by a regular Claygent** — or when the user explicitly asks to upgrade one (see "Upgrade a regular agent node"). In both cases, verify the `accountId` wiring afterwards — it auto-wires from a single upstream accounts audience trigger; under a people trigger, wire `accountId` manually to the account record id available from the person record (see "Wiring accountId" below).
 
@@ -62,9 +70,11 @@ If the account agent is also managed from an Audiences page, your edit does not 
 ## Web search
 
 Account agents do not search the web unless web search is turned on in the account agent
-builder. The node's `agentInternetSearchEnabled` shows the current setting; it cannot be
-changed from a workflow, so tell the user to change it in the builder when the task needs
-the opposite.
+builder. The node's `agentInternetSearchEnabled` shows the current setting. It cannot be
+changed from a workflow, and an account agent created with `create-account-agent` starts
+with it off. When a step needs web research and the setting is off, split the step as
+described in "When to use an account agent" instead of stopping to ask the user to change
+the setting.
 
 ## Do not edit or disclose its model or input variables
 

@@ -1,7 +1,7 @@
 ---
 name: update
 description: Keep Clay up to date. Use when the user asks to update or upgrade Clay, the plugin, or the `clay` CLI; when `clay update` reports the CLI is pinned / managed by the plugin; or to check whether a newer version is available. The plugin and CLI update independently; migrate older plugin-managed installs through setup.
-allowed-tools: Bash, Read
+allowed-tools: Bash(clay --version), Bash(clay update --check), Read
 ---
 
 # Keeping Clay up to date

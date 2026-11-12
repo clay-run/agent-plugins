@@ -79,7 +79,10 @@ clay workflows runs rerun <workflowId> <runId...>
   plain form or the trigger's own entry point for those.
 
 `--record-ids` runs exactly those Audiences records instead of the segment's first
-`--limit` members; pass one or the other, not both.
+`--limit` members; pass one or the other, not both. Submit the full authorized
+selection in one command with one approval when supported. If the API reports a
+lower workspace limit, use batches within that limit and retain all requested
+records. For remaining-record backfills, exclude completed tests.
 
 `clay workflows nodes test <workflowId> <nodeId> --source-run <runId>` can start at a new
 or unexecuted node. Its current input mappings resolve against completed upstream steps in

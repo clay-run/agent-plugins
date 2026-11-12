@@ -18,7 +18,8 @@ infer configuration or execution inputs from the display-only context.
 
 Supporting files in this directory: `publishing.md`, `testing.md`, `data-passing.md`,
 `presenting.md`, `audiences.md`, `account-agents.md`, `run-analysis.md`, `node-groups.md`,
-`csv-triggers.md`, `table-primitives.md`, `table-waterfalls.md`, `industry-mapping.md`.
+`csv-triggers.md`, `table-primitives.md`, `table-waterfalls.md`, `industry-mapping.md`,
+`repeat-function-calls.md`.
 
 Read this skill before proposing a workflow plan, even when the user asks for no workspace
 queries or changes. For Audiences destinations or field mappings, also read `audiences.md`
@@ -86,8 +87,12 @@ You are helping users build and edit Clay workflows.
 
 Common node types (not just agent/tool — pick the type that fits the step):
 
+- **Classify steps** — a Use AI tool node with `useCase` `decision` that sorts each record into
+  one of 2–255 fixed categories, with branch-ready `$.result.categoryId`. Use it for fixed-category
+  labels from supplied data and whenever the user asks for Jev (`jev-1.13.0`). There is no
+  `classify` nodeType; follow the recipe in `clay workflows nodes insert --help`.
 - **Claygent (agent) nodes** (`nodeType: "agent"`) — LLM loops with prompts (reasoning,
-  drafting, summarizing, classifying). Read and follow the complete `/workflows-claygent`
+  research, drafting, summarizing, open-ended classification). Read and follow the complete `/workflows-claygent`
   skill before creating, editing, or running one.
   - **Create:** send `agentName` and `agentPrompt` **together in the same** `--input` —
     separate calls can persist a blank prompt. Omit `agentModel` to use the workspace default
@@ -517,7 +522,9 @@ don't guess at flags.
   already backed by a regular Claygent, and is one-way. Under an audiences trigger, default to an
   account agent for work that benefits from account context (research, enrichment, scoring,
   qualification, personalized outreach), and keep a regular Claygent for pure synthesis of
-  upstream output. Include a downstream write-to-audiences node for account-agent results,
+  upstream output. Account agents created from a workflow cannot search the web, so give
+  public web research to a regular Claygent, downstream of the account agent when the step
+  also needs account context (see `account-agents.md`). Include a downstream write-to-audiences node for account-agent results,
   reusing an existing node when possible; follow `audiences.md` for mappings and explicit
   destination or no-save instructions.
 - **Read `account-agents.md` in full before any account-agent work** (linking, upgrading,
@@ -696,9 +703,10 @@ is fine as two calls).
 
 ### List mode (Repeat)
 
-An agent, code, or tool node can run once per item in an upstream list instead of once over
-the whole list. In the editor this is the **Repeat** toggle. Describe it to the user as
-**"runs once per item"** — never say it "maps over the list" or call it a map/loop.
+An agent, code, tool, or workflow function call node (including a native waterfall) can run
+once per item in an upstream list instead of once over the whole list. In the editor this is
+the **Repeat** toggle. Describe it to the user as **"runs once per item"** — never say it "maps
+over the list" or call it a map/loop.
 
 Enable it on the node with `listMode: true` **and** `listEntriesRef` in the same
 `clay workflows nodes update` (or on create), pointing at the upstream array:
@@ -727,6 +735,12 @@ node still fails and the run stops.
 **When to use it:** the same per-record work over a list (enrich each row, draft one message
 per lead), inline on one node. **When not:** a single aggregate step over the whole list — leave
 `listMode` off.
+
+**Function calls and waterfalls:** read `repeat-function-calls.md` before turning on Repeat for a
+workflow function call or native waterfall, and whenever each item needs more than one step — it
+covers mapping the current item, the two-update waterfall flow, and when to use one repeating
+function call instead of a chain of Repeat nodes.
+
 Unsupported on account agent nodes and on trigger/conditional/map/reduce/collect/fork/join.
 If the workspace has list mode disabled, the update rejects — relay that rather than retrying.
 

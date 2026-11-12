@@ -140,8 +140,9 @@ it is type-preserving and passes the whole object, including dynamic keys.
   `automap_inputs` can fill it.
 - Use `null` to clear (HubSpot is the exception, below), never a placeholder such as
   `"Unassigned"`, `"N/A"`, `"null"` or `0`. How an empty string `""` is treated differs by action.
-- Set the action's "Ignore blank values" input (`removeNullValues` or `removeBlankValues`) to
-  the static value `false` in the same mapping. When it is `true`, the action drops the `null`.
+- For provider actions, set the action's "Ignore blank values" input (`removeNullValues` or
+  `removeBlankValues`) to the static value `false` in the same mapping. When it is `true`, the
+  action drops the `null`. Write to Audiences uses per-field write modes instead, as described below.
 - Salesforce Update record clears a field sent as `null` with that input `false`. For Marketo
   and Airtable updates, the `null` reaches the provider; read the record back to confirm it
   cleared.
@@ -158,10 +159,13 @@ it is type-preserving and passes the whole object, including dynamic keys.
   and a boolean `false`). Tell the user the field was not cleared instead of reporting
   success.
 - For Write to Audiences, each selected field must come from an upstream value, so a bare static
-  `null` fails graph validation. With the field's write mode set to
-  `always_write_including_blanks`, it is cleared when that upstream value is empty, for example
-  a `coalesce` of the reference followed by a static `null`. To clear it unconditionally, the
-  upstream node has to output an empty value for it. Whether the clear beats values that other
+  `null` fails graph validation. With
+  `recordFields|writeMode|<id>` set to the static value `always_write_including_blanks`, it is cleared
+  when that upstream value is `null`, `""`, or missing. Here, missing means the selected, mapped
+  source field has no value on that record; leaving a destination field unselected or unmapped
+  does not request a clear. `0` and `false` remain ordinary values. Leave the legacy
+  `recordFields|removeNullValues` setting unchanged; new nodes default it to `true`, and setting
+  it to `false` alone does not request a clear. Whether the clear beats values that other
   sources (another node or workflow, an import, a CRM sync) wrote earlier depends on whether
   explicit Audiences clears are turned on for the workspace. When they are, the clear wins over
   every earlier value and only a later write fills the field again. When they are not, an
@@ -509,11 +513,12 @@ into the code node's 1-second limit. Instead:
 
 ## Choosing a method
 
-| Scenario                                             | Method                                                                                                                                                  |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Numeric scores, IDs, booleans into an **agent** node | Pinned inputs (`sourceNodeId`/`sourcePath`)                                                                                                             |
-| Data from 2+ hops back into an **agent** node        | Pinned inputs                                                                                                                                           |
-| Any input into a **code** node                       | Pinned inputs on `inputSchema` (Method 3), from the node that produced the value                                                                        |
-| Any input into a **tool** node                       | `inputMappingConfig` (`static` / `reference`)                                                                                                           |
-| An input into a **repeating (list mode) tool** node  | Enable `listMode: true` + `listEntriesRef` on the node first (parent skill), then `inputMappingConfig` `item` (`{ "type": "item", "path": "$.field" }`) |
-| An input into a **repeating (list mode) agent** node | `{{__item}}` / `{{__item.field}}` in the prompt                                                                                                         |
+| Scenario                                                         | Method                                                                                                                                                                                               |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Numeric scores, IDs, booleans into an **agent** node             | Pinned inputs (`sourceNodeId`/`sourcePath`)                                                                                                                                                          |
+| Data from 2+ hops back into an **agent** node                    | Pinned inputs                                                                                                                                                                                        |
+| Any input into a **code** node                                   | Pinned inputs on `inputSchema` (Method 3), from the node that produced the value                                                                                                                     |
+| Any input into a **tool** node                                   | `inputMappingConfig` (`static` / `reference`)                                                                                                                                                        |
+| An input into a **repeating (list mode) tool** node              | Enable `listMode: true` + `listEntriesRef` on the node first (parent skill), then `inputMappingConfig` `item` (`{ "type": "item", "path": "$.field" }`)                                              |
+| An input into a **repeating (list mode) workflow function call** | Enable `listMode: true` + `listEntriesRef` on the call first, then the call's `inputMappingConfig`: `item` for per-item inputs, `static` / `reference` for the rest (see `repeat-function-calls.md`) |
+| An input into a **repeating (list mode) agent** node             | `{{__item}}` / `{{__item.field}}` in the prompt                                                                                                                                                      |

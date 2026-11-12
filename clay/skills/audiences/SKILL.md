@@ -1,6 +1,6 @@
 ---
 name: audiences
-description: Clay Audiences — the workspace's own people, companies, and deals (contacts, leads, accounts, customers). Use for any request about their records when no surface is named, including counts, fill rates, lookups ("how many people have a phone?"), saved segments, and field definitions. Also deal and pipeline questions like largest opportunities, biggest pipeline items, recent wins, closed-won, deal stage, and ACV. Also the calls and meetings synced onto those records, such as Gong recordings.
+description: Clay Audiences — the workspace's own people, companies, and deals (contacts, leads, accounts, customers). Use for any request about their records when no surface is named, including counts, fill rates, lookups ("how many people have a phone?"), saved segments, and field definitions. Also deal and pipeline questions like largest opportunities, biggest pipeline items, recent wins, closed-won, deal stage, and ACV. Also the calls and meetings synced onto those records, such as Gong recordings, and which accounts discussed a topic on their calls.
 ---
 
 # Clay Audiences
@@ -238,6 +238,24 @@ known IDs into batches and reuse hydrated records across overlapping scopes. Rec
 not found are omitted rather than erroring. To size a scope, use `search-count`,
 not a paging loop over `search-ids`.
 
+### Search companies by what was said on calls
+
+```bash
+clay audiences records search-calls --query 'raised pricing objections' --limit 10
+```
+
+Use this when the question is about what was discussed on Gong calls: "which accounts
+raised pricing objections?", "who asked about SOC 2?". It searches call summaries and
+transcripts by meaning, so describe what was said rather than listing keywords. It
+returns company records in the `records get` shape, ranked by best-matching call, with
+`totalMatched` across pages. It returns companies only, not the calls, so answer with the
+accounts and do not quote what was said.
+
+Narrow with `--audience-id`, or intersect the returned `recordId`s with a `search-ids`
+query for structured conditions. A workspace whose Gong calls are not indexed gets
+`auth_forbidden`; tell the user call transcript search is not enabled there rather than
+falling back to reading call titles as if they were transcripts.
+
 ### Budget the walk before you start it
 
 `search-count` first, then decide whether a full walk is needed. Searches and
@@ -292,7 +310,8 @@ clay audiences activities summary --segment-id audseg_abc --since 2026-08-01 --u
   latest campaign activity before I run a workflow".
 
 Calls and meetings from Gong, calendars, and CRMs sync in as `call` and `meeting` activities on
-the companies and people involved. When the user asks about a call without naming a segment, such
+the companies and people involved. To find accounts by what was said on their calls, use
+`records search-calls` (see Records). When the user asks about a call without naming a segment, such
 as a good Gong call to watch, read call activities over a segment that covers those records (find
 one with `clay audiences list --entity-type companies`), then pick by title and date. Activity
 rows carry no recording link: give the title, date, and account so the user can open it in Gong,

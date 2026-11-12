@@ -1,7 +1,7 @@
 ---
 name: cli-setup
 description: Clay CLI setup — install and authenticate the `clay` CLI for command-line access to Clay. Use when the user asks to install or sign into the CLI, or a task that needs the CLI finds `clay` missing from PATH, at the wrong version, or failing `clay whoami` / not signed in. Also use when the Cursor plugin never appears after a local install, or the user wants to configure Clay. Signs the user in and runs first-run onboarding for new users.
-allowed-tools: Bash, Read, Edit, Write
+allowed-tools: Bash(clay --version), Bash(clay whoami), Bash(echo "exit_code=$?"), Bash(clay login), Bash(clay login --device), Bash(npm list --global --depth=0), Read
 ---
 
 # Clay CLI setup

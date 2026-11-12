@@ -122,11 +122,16 @@ For an `audience_enrichment` trigger, preserve its existing record identity by f
 - `lookupFields|<id>` for every id above — value to match on.
 - `recordFields|selectedRecordFields` (static array) — fields to write.
 - `recordFields|<id>` for every id above — value to write.
-- `recordFields|removeNullValues` (static bool) — `true` skips blanks; `false` overwrites with them.
+- To explicitly clear a field, set `recordFields|writeMode|<id>` to the static value `always_write_including_blanks` and map `recordFields|<id>` to an upstream value; `null`, `""`, or a missing value clears it only when explicit Audiences clears are enabled for the workspace (`enable-audiences-clear-field-command`). `0` and `false` remain ordinary values. See `data-passing.md` for mapping and verification guidance.
 
 Every id in a `selected*` array MUST have a matching `<group>|<id>` binding, or the action returns `ERROR_BAD_REQUEST`.
 
+A missing value means a selected, mapped source field has no value on that record. Leaving a destination field unselected or unmapped does not request a clear.
+
 ### Verify a writeback
+
+If explicit-clear availability is unknown, do not promise a clear. After execution, read the record
+back before reporting success; a successful step alone does not prove the field cleared.
 
 A workflow writeback can also change Clay-maintained system fields: `updated_at` moves,
 `external_source_sync_status_v3` gains an entry for the workflow, and `workflows` gains the
@@ -216,7 +221,6 @@ the field should exist.
     "type": "reference",
     "expression": "{{org_name}}"
   },
-  "recordFields|domain": { "type": "reference", "expression": "{{domain}}" },
-  "recordFields|removeNullValues": { "type": "static", "value": true }
+  "recordFields|domain": { "type": "reference", "expression": "{{domain}}" }
 }
 ```
