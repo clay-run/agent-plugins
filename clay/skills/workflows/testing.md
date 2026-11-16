@@ -152,7 +152,7 @@ clay workflows runs get <runId>                  # single request (may still be 
 
 Terminal statuses are `completed`, `failed`, `cancelled`, and `paused`. `paused`
 is returned rather than waited through — the run will not advance without
-`clay workflows runs resume` or the paused trigger goes live. `--wait` also returns when a node has
+`clay workflows runs resume`. Taking a paused trigger live again does not resume its paused runs unless the update adds `--resume-paused-runs`. `--wait` also returns when a node has
 `waitingReason` `agent_step_limit_reached`; other `waiting` reasons are not
 terminal (async work is still in flight). If `--wait` returns `status: waiting`,
 human intervention is required somewhere. With `--wait <seconds>`, any other
@@ -204,6 +204,44 @@ clay workflows runs list <workflowId>
   new, so the retry can't start a second set of runs. A failed submit names its id in the error's
   `details.submissionId`. Minting it yourself, as above, also covers a command that dies before
   printing anything.
+
+## Pausing, resuming, or stopping many runs
+
+To pause, resume, or stop more than one run, use `clay workflows runs bulk pause|resume|stop`, never
+`runs pause` or `runs resume` in a loop. One bulk command changes every selected run in one request
+and is approved once; a loop makes one request, and one approval, per run.
+If `clay workflows runs --help` doesn't list `bulk`, the installed CLI predates these commands:
+change runs one at a time with `runs pause` and `runs resume`, or ask the user to select them on
+the workflow's Runs page and use Pause, Resume, or Stop there.
+
+```bash
+# Every paused run of a workflow: preview the count, then resume them
+clay workflows runs bulk resume <workflowId> --status paused --dry-run | jq '.actionableRunCount'
+clay workflows runs bulk resume <workflowId> --status paused
+
+# Chosen runs, by id
+clay workflows runs bulk pause <workflowId> --run-id <runId> --run-id <runId>
+```
+
+- Choose runs with `--run-id` (repeatable, or `-` to read ids from stdin), or with the filters
+  `--status`, `--created-after`, `--created-before` and `--batch-id`, or with `--query`. There is
+  no default: a command that names no runs is rejected.
+- Only runs in the state the action changes are touched: `pause` changes running runs, `resume`
+  paused ones, and `stop` pending, running, or waiting ones. `actionableRunCount` is how many that
+  is; when it is 0 nothing is submitted.
+- `stop` cannot be undone: stopped runs end as cancelled. Confirm with the user first. It skips
+  paused runs, so `stop --status paused` changes nothing, and it does not cancel queued backfills
+  whose runs have not started yet.
+- Bulk commands find runs a few seconds after they start, longer when the system is busy. With
+  `--run-id`, ids they can't find yet are counted in `unmatchedRunCount`, and nothing is changed
+  until it is 0: wait a few seconds and run the command again. Filters (`--status`, `--batch-id`,
+  `--query`) leave runs that new out without saying so. To pause runs started seconds ago, use
+  `runs pause` for each run id.
+- A run whose trigger is still paused pauses itself again at its next step, so resume the trigger
+  before resuming its runs.
+- The change is applied in the background. Approval (`approval_required`) and retries work as for
+  `runs rerun` above: present the request, don't run the command again after approval, and retry a
+  failed submit with the same `--submission-id`.
 
 ## Inspecting what a run did (instead of "logs")
 

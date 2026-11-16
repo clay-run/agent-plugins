@@ -288,11 +288,9 @@ segment ids with `clay audiences list` and compare `segmentIds` against those
 ids. This matters most before a write — `delete` on the wrong match is not
 recoverable.
 
-The `signal_summary` default field on people and companies is derived from those
-signal events, so it is the record-level view of what a signal has been doing.
-See the `audiences` skill for reading it, and its `filters.md` for selecting
-records **by** their signal events — "companies with a job posting in the last
-30 days" is an audience filter, not a signals command.
+See the `audiences` skill's `filters.md` for selecting records **by** their
+signal events — "companies with a job posting in the last 30 days" is an
+audience filter, not a signals command.
 
 To read the captured events for one person or company, use the Audiences
 `signals list` command with `--entity-id`. For a saved segment, use `signals list`
@@ -354,7 +352,7 @@ check it in the store the signal actually watches, which `input` on `get` tells 
   field gives the fill rate, per the `audiences` skill.
 - **`input.table` set** — the records live in that table, and `input.table.viewId`
   narrows the watch to one view when it is set, so coverage has to be measured over that
-  view and not the whole table. Read `/tables`.
+  view and not the whole table. Read `/tables-cli`.
 
 `signal.inputs` on `get` is the stored per-type configuration, returned as-is — read a
 working signal of a type before assuming its shape.
@@ -445,7 +443,7 @@ existing signal's output, not a new signal:
    by name (see **Signals on audiences**). A signal of the right type watching the right
    records already answers the question, and a second one would double the spend.
 2. **If a fitting signal exists, read its output rather than creating another.**
-   For a table-based signal, read `destinationTable.id` with the `/tables` skill. For an
+   For a table-based signal, read `destinationTable.id` with the `/tables-cli` skill. For an
    audiences-based signal, use `clay audiences signals list --entity-id` when
    one person or company is in scope, `clay audiences signals list --segment-id`
    for full event payloads across a saved segment, or `signals summary` for
@@ -489,9 +487,9 @@ first step. When helping a user design one, ask what the other two are.
   researching your category now; usually combined with fit filters rather than
   acted on alone.
 
-Events land in the destination — table rows, or activities on audience entities
-plus the derived `signal_summary` field. Workflows can react through an
-`audience_signal` trigger or use a segment when membership is the intended condition.
+Events land in the destination — table rows, or activities on audience entities.
+Workflows can react through an `audience_signal` trigger or use a segment when
+membership is the intended condition.
 
 ## Common issues and how to avoid them
 

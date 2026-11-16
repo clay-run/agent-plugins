@@ -4,6 +4,18 @@ Read this when the user asks for a number, a list, or a fact about their people
 or companies — "how many…", "what's the fill rate on…", "who has…", "look up X
 for these accounts", "which customers…".
 
+## Call-content questions
+
+For questions across calls (objections, competitors, topics, or useful recordings),
+use `activities search --activity-types call --query <text>`. To restrict the calls,
+first run `activities list --activity-types call --sources GONG` with the record,
+segment, and date filters you need. Follow its cursor, then pass the returned
+eventIds unchanged to search with `--activity-ids <ids>` (up to 1,000). If there
+are no matching calls, stop; omitting the flag searches the whole workspace.
+Read matched passages before answering; use `activities get`
+when the passage needs surrounding context or speaker attribution. Missing search
+availability is a limitation, not a negative search result.
+
 ## Audiences is the default home for "their" data
 
 When a user mentions people, companies, contacts, leads, accounts, or customers

@@ -8,6 +8,41 @@ description: Clay — start here. A table of contents for working with Clay and 
 Clay is a GTM (go-to-market) data and automation product. This skill is a table of
 contents: find what you want to do and go to that skill.
 
+## Accessing Clay
+
+Use the connected Clay MCP tools or the Clay CLI, whichever this session has.
+
+- **Use connected MCP tools first.** Before your first Clay operation, and before
+  running `clay`, the CLI readiness check below, or `cli-setup`, check your available
+  tools for Clay MCP tools. If your tools aren't all listed up front, list or search
+  them. When Clay MCP tools are connected, use them for everything they cover. Do not
+  install or sign in to the CLI, and do not run the CLI readiness check, unless the user
+  asks for the CLI.
+- **Map CLI examples to tools.** The skills describe operations in CLI syntax. With
+  connected tools, match each operation to the tool whose description and input schema
+  fit it, rather than converting the command mechanically. Tool names may have a
+  connector prefix. Pass structured arguments, use a tool's help when you need details,
+  and reuse returned IDs directly.
+- **The CLI's state doesn't affect MCP.** A missing, outdated, or signed-out `clay`
+  command does not mean the MCP connection is unauthenticated.
+- **Report MCP authentication errors.** If a connected tool returns an authentication
+  error, tell the user; they may need to reconnect Clay in their client. Do not switch
+  to CLI sign-in.
+
+If no Clay interface is available, ask the user to connect Clay through their client's
+connector settings or to choose CLI access with `cli-setup`. Whichever interface you
+use, keep the domain skills' planning, credit approval, and execution requirements.
+
+### CLI readiness
+
+Only when no Clay MCP tools are connected, or the user chooses the CLI: before the
+first CLI task in Claude Code, Codex, Cursor, or Cowork, follow any session-start
+readiness message. Resolve `<PLUGIN_ROOT>` as two levels above this skill’s directory.
+If no hook message was available, run `bash "<PLUGIN_ROOT>/scripts/check-cli.sh" plain`
+from this plugin copy. Follow `cli-setup` if it reports a missing, old, or
+plugin-managed CLI; do not reinstall or check for latest releases on every command.
+Skip this in managed Clay sessions.
+
 ## How to work
 
 Whatever you're doing in Clay, work transparently so the user can follow along:
@@ -76,15 +111,6 @@ Whatever you're doing in Clay, work transparently so the user can follow along:
   Follow `nextStep` on retries; report saved decisions without offering them for review again.
   Stop on `auth_forbidden`; proposing and deciding require workspace admin access.
   Report changes as applied only after acceptance succeeds.
-
-## CLI readiness in external agents
-
-Before the first CLI task in Claude Code, Codex, Cursor, or Cowork, follow any
-session-start readiness message. Resolve `<PLUGIN_ROOT>` as two levels above this
-skill’s directory. If no hook message was available, run
-`bash "<PLUGIN_ROOT>/scripts/check-cli.sh" plain` from this plugin copy. Follow
-`cli-setup` if it reports a missing, old, or plugin-managed CLI; do not reinstall or
-check for latest releases on every command. Skip this in managed Clay sessions.
 
 ## Answering "what can I do with Clay?"
 

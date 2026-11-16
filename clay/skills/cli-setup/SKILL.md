@@ -13,9 +13,13 @@ Before using this skill, read the `clay` entry skill if you haven’t already th
 Continue with this skill when the user asks to install or sign into the CLI,
 asks to fix plugin registration (for example, a Cursor plugin that never appears), or
 the task uses the CLI. Honor the user's choice of CLI even when Clay MCP tools are
-connected. For a task already using MCP, return to the skill you came from: a
-missing, outdated, or signed-out `clay` executable does not affect the MCP session
-and does not require CLI setup.
+connected. First check your available tools for Clay MCP tools. When they are
+connected and the user hasn't asked for the CLI, stop and return to the skill you came
+from. When they are connected and the user asked to run operations with the CLI but not
+to install or sign in to it, ask before installing or signing in: CLI sign-in needs the
+user to approve it in a browser, and the connected tools can run the same operations
+now. A missing, outdated, or signed-out `clay` executable does not affect the MCP
+session.
 
 Install the CLI independently of the plugin, then check authentication. The same flow
 applies to Claude Code, Codex, Cursor, and Cowork. Keep existing credentials and the

@@ -1,7 +1,7 @@
 ---
 name: searches
 description: Use to find net-new people/companies by employer, name or title, refine criteria and page results. Other filters route to searches-advanced.
-allowed-tools: Bash(clay *), Bash(jq *), Bash(grep *), Read, Grep
+allowed-tools: Read, Grep
 ---
 
 # Clay search

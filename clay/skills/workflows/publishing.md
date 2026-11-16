@@ -21,6 +21,16 @@ Users **can** pause and resume an individual trigger with
 fields). Resuming a paused trigger returns it to live; it is not a publish, and
 going live for the first time is only ever through publishing.
 
+Pausing a trigger also pauses every run of it that has not finished, except test runs, so don't
+pause those runs one by one with `clay workflows runs pause`. Test runs keep going after a trigger
+pause; pause them with `runs pause`. Resuming the trigger does not resume them on its own: to
+bring back the trigger and the runs it paused, add `--resume-paused-runs` to `{"status":"live"}`.
+That is one request and one approval for the trigger and all its paused runs. On a trigger that is
+already live, the same command resumes only its paused runs.
+If `clay workflows triggers update --help` doesn't list `--resume-paused-runs`, the installed CLI
+predates it: resume the trigger on its own, then ask the user to resume its paused runs from the
+trigger in Clay, with "Also resume all paused runs from this trigger" in the Resume trigger dialog.
+
 A trigger's `dataSource` is also outside draft vs live. It configures the source that feeds the
 trigger, which is not part of the workflow's versions, so changing it with `triggers update`
 applies **immediately**, with no publish: a live trigger's next run (scheduled or requested)

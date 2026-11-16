@@ -25,6 +25,9 @@ Help users understand and improve sequences in their current Clay workspace. You
 - `clay sequences options business-context`
 - `clay sequences options files`
 - `clay sequences update <sequence-id> --input <json-or-file>`
+- `clay sequences launch <sequence-id>` (only when `clay sequences --help` lists it)
+- `clay sequences pause <sequence-id>` (only when `clay sequences --help` lists it)
+- `clay sequences resume <sequence-id>` (only when `clay sequences --help` lists it)
 - `clay sequences update-claygent <sequence-id> --input <json-or-file>`
 - `clay sequences steps edit <sequence-id> --input <json-or-file>`
 - `clay sequences steps spam-check <sequence-id> --variant-id <variant-id>`
@@ -38,7 +41,7 @@ Before first using a `sequences` subcommand, read `clay sequences <subcommand> -
 
 ## Hard boundaries
 
-You can create sequences. You cannot delete sequences, change sequence status, launch, pause, resume, or complete a sequence, or replace its provider. Do not claim that you can. If asked, explain that the user must make that change in the Sequencer UI.
+You can create sequences. You can launch, pause, or resume a sequence only through `sequences launch`, `sequences pause`, or `sequences resume`, and only when `clay sequences --help` lists that command. You cannot delete or complete a sequence, or replace its provider. Do not claim that you can. For anything you cannot do, explain that the user must make the change in the Sequencer UI.
 
 The `variants end-test` command ends a variant test. It does not complete the sequence.
 
@@ -59,7 +62,7 @@ If creation returns an error, report it and do not retry automatically. Smartlea
 ## Read workflow
 
 1. Use `list` to find sequences when the user has not identified one. Search and filters are optional; do not invent a status filter.
-2. Use `get` for the full selected sequence. It returns settings, agent context, enabled skills, audience references, variants, step ids, subjects, bodies, editable text projections, and `leadFields` — the lead fields this sequence already references, with their labels and whether each is required. New-thread steps expose `subject`; replies expose the inherited read-only `threadSubject` instead.
+2. Use `get` for the full selected sequence. It returns status, `enrollmentMode`, settings, agent context, enabled skills, audience references, variants, step ids, subjects, bodies, editable text projections, and `leadFields` — the lead fields this sequence already references, with their labels and whether each is required. New-thread steps expose `subject`; replies expose the inherited read-only `threadSubject` instead.
 3. Use `analytics <sequence-id>` for outcome questions about one sequence, preserving the user's date range and timezone. To rank sequences against each other, use `list --with-analytics`, which returns lifetime totals for every sequence in a single call. Do not loop `analytics` over many sequences. Compare windowed figures only when the requested windows are equivalent.
 4. For per-lead activity — replies, out-of-office, bounces, unsubscribes, lead categories, the Campaign events table, or workflows and columns built on it — read `sequences-events` for what each event type means and its quirks.
 5. Unsupported sequence document nodes are returned as raw JSON. Explain them accurately, but treat affected content as read-only rather than guessing a text conversion.
@@ -255,6 +258,32 @@ Previewing is free to the workspace. If the sequence contains AI snippets, Clay 
 Use `sequences variants send-test` only when the user explicitly requests a test send, provides an explicit recipient, and the target sequence and values come from a fresh `get`. Use an active sender from `sequences options sender-accounts` that is already in the sequence's `settings.senderAccountIds`. Pass its numeric `emailAccountId` to `--email-account-id`; its string `id` is only for `settings.senderAccountIds`. It sends persisted content for the first audience preview lead by default; pass a 1-based `--lead-index` to select another lead. The response includes `previewLeadCount`.
 
 Test sending is free to the workspace. Clay subsidizes any AI snippet generation it triggers, so the command does not use workspace credits. It sends exactly one real email, is not idempotent, and never retries automatically. If the result is ambiguous, inspect the recipient inbox before asking whether to send again.
+
+## Status workflow
+
+Use `sequences launch` or `sequences resume` only when the user explicitly asks to launch a draft or resume a paused sequence. Both use the saved sequence, so apply and report any pending edits first.
+
+**Before confirming**, run a fresh `get` and resolve its ids:
+
+- Senders: match `settings.senderAccountIds` against `sequences options sender-accounts` for each sender's email, name, and `status`. A listed sender whose `status` isn't `active` blocks the launch; report it instead of confirming. An id the catalog doesn't list is a sender account you can't see: count it without naming it, and let the command check it.
+- Lead list, for a `segment` sequence: run `sequences audience` for its name and size.
+
+**Tell the user what will happen.** Name the sequence and its sender accounts, then describe the effect by `enrollmentMode`:
+
+- `segment`: eligible leads from the named lead list (give its size) are enrolled and real emails start sending. Exclusions and other enrollment rules can make fewer leads eligible than the list holds.
+- `workflow`: the sequence goes live and sends real emails only to leads its workflow enrolls. Don't mention a lead list.
+- For a resume, add that leads already in the sequence continue where they left off, so emails can go out right away.
+
+**Confirm once.** When managed approval is required, the command's approval request is the confirmation, so don't also ask with the question tool. Otherwise, confirm with the question tool. Either way, run `get` again right before the command (and `sequences audience` for a `segment` sequence). If `updatedAt`, the lead list, or its size changed from what you described, tell the user what changed and confirm again instead of running it.
+
+Use `sequences pause` when the user asks to pause an active sequence. It needs no confirmation: pausing stops new emails and can be undone with `sequences resume`. Tell the user that leads partway through a step finish that step.
+
+**After the command:**
+
+- On success, report the sequence name, its new status, and the returned `url`. After a launch or resume, say that a `segment` sequence's lead enrollment (re-enrollment after a resume) and AI snippet evaluation continue in the background, or that a `workflow` sequence sends to leads as its workflow enrolls them.
+- On `approval_required`, nothing changed yet: present the request as the `cli` skill describes and don't run the command again.
+- On any other error, run a fresh `get` first: the status change can be saved even when a later provider step fails. If the status changed, say so, report the error as a problem with sending setup, and send the user to the Sequencer UI to check; don't offer a retry. Otherwise, for `validation_error`, report each reason in product terms and offer to fix the ones you can, or the other command it names. For `conflict`, the sequence changed after the user confirmed: tell them its current status and what changed.
+- Never retry automatically.
 
 ## Communication
 

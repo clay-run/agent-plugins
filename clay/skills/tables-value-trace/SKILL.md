@@ -1,7 +1,7 @@
 ---
 name: tables-value-trace
 description: Clay tables — explain one cell by walking a column backward through its dependencies and run-gate to the origin or root cause. Use when the user asks "where did this value come from?", "why did {action} error?", "why didn't {action} run?", or "why is this value empty?".
-allowed-tools: Bash(clay *), Bash(jq *), Read
+allowed-tools: Read
 ---
 
 # Value-trace

@@ -1,7 +1,7 @@
 ---
 name: tables-trace
 description: 'Clay tables — locate a record by identifier and snapshot its state: which table(s) hold it and each cell''s status. Use when the user has an id and asks "trace {id}", "where is {id}?", "what enrichments ran for this lead?", or "is this record done?".'
-allowed-tools: Bash(clay *), Bash(jq *), Read
+allowed-tools: Read
 ---
 
 # Trace a record

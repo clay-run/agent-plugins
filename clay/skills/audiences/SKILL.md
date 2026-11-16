@@ -1,6 +1,6 @@
 ---
 name: audiences
-description: Clay Audiences — the workspace's own people, companies, and deals (contacts, leads, accounts, customers). Use for any request about their records when no surface is named, including counts, fill rates, lookups ("how many people have a phone?"), saved segments, and field definitions. Also deal and pipeline questions like largest opportunities, biggest pipeline items, recent wins, closed-won, deal stage, and ACV. Also the calls and meetings synced onto those records, such as Gong recordings, and which accounts discussed a topic on their calls.
+description: Clay Audiences — the workspace's own people, companies, and deals (contacts, leads, accounts, customers). Use for any request about their records when no surface is named, including counts, fill rates, lookups ("how many people have a phone?"), saved segments, and field definitions. Also deal and pipeline questions like largest opportunities, biggest pipeline items, recent wins, closed-won, deal stage, and ACV. Also Data hub enrichment configuration, audience assignments, and parity checks. Also the calls and meetings synced onto those records, such as Gong recordings, and which accounts discussed a topic on their calls.
 ---
 
 # Clay Audiences
@@ -41,6 +41,9 @@ Read this before any audiences work. Supporting references:
   renewal, expansion, churn, "our customers". Deals are read-only. Use the DSL
   `opportunities` root for deal counts and IDs; use people/company roots when
   the requested results are contacts/accounts associated with those deals.
+- The `workflows` skill’s [enrichments.md](../workflows/enrichments.md) — **read for Data hub enrichment inspection, parity checks, and reuse across
+  segments.** Maps native assignments, provider order, mappings, overwrite rules, schedules,
+  and budgets to the workflow CLI; separates inspection from edits and execution.
 - The `workflows` skill's `audiences.md` — writing values onto records (the
   `upsert-audiences-record` action) and triggering a workflow off an audience.
 
@@ -176,14 +179,10 @@ Present in every workspace, so you can write a filter against these without
 listing fields first:
 
 - **people** — `name`, `first_name`, `last_name`, `email`, `linkedin_url`,
-  `phone`, `title`, `signal_summary`
+  `phone`, `title`
 - **companies** — `org_name`, `domain`, `headquarters_location`, `linkedin_url`,
-  `sfdc_owner_id`, `signal_summary`, `technographics`
+  `sfdc_owner_id`, `technographics`
 - **deals** — see `custom_objects.md`
-
-`signal_summary` is derived from the signal events a signal has written onto the
-record, not something you set — to see which signals feed it, use the `signals`
-skill.
 
 Anything else is workspace-defined — get its id from `fields list`.
 
@@ -309,13 +308,19 @@ clay audiences activities summary --segment-id audseg_abc --since 2026-08-01 --u
   since last week", "which sources drove activity for this audience?", "sample the
   latest campaign activity before I run a workflow".
 
-Calls and meetings from Gong, calendars, and CRMs sync in as `call` and `meeting` activities on
-the companies and people involved. To find accounts by what was said on their calls, use
-`records search-calls` (see Records). When the user asks about a call without naming a segment, such
-as a good Gong call to watch, read call activities over a segment that covers those records (find
-one with `clay audiences list --entity-type companies`), then pick by title and date. Activity
-rows carry no recording link: give the title, date, and account so the user can open it in Gong,
-and never construct a URL.
+### Call search
+
+- For cross-call questions, use `activities search --activity-types call --query`.
+  It searches Gong call summaries and transcript passages, ranked by relevance.
+  To restrict search by record, segment, or date, first use `activities list` with
+  those filters and `--activity-types call --sources GONG`. Follow pagination, then
+  pass the returned eventIds unchanged to `--activity-ids` (up to 1,000). Omitting
+  this flag searches across the workspace. If no calls match the list filters,
+  stop rather than searching without IDs. Returned `recordIds` are company IDs.
+  If `truncated` is true, lower-ranked calls exceeded the 1 MiB response cap;
+  narrow the query or activity IDs to explore further.
+  Matches have no speaker names. Fetch a call's details when attribution or more
+  context matters. Email is not searchable; read it with `activities list`.
 
 ## Signals
 

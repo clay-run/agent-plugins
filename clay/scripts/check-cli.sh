@@ -26,7 +26,7 @@ else
   fi
 fi
 [ -n "$message" ] || exit 0
-message="For CLI access only: $message Honor the user's choice of CLI or MCP. For tasks already using connected Clay MCP tools, CLI installation and sign-in are unnecessary; skip cli-setup for those tasks."
+message="If Clay MCP tools are connected, use them and skip CLI setup unless the user asks for the CLI. For CLI access only: $message"
 case "${1:-plain}" in
   claude|codex) printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$message" ;;
   cursor) printf '{"additional_context":"%s"}\n' "$message" ;;

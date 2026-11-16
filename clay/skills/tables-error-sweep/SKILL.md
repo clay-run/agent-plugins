@@ -1,7 +1,7 @@
 ---
 name: tables-error-sweep
 description: Clay tables — sweep a table for errored rows and report grouped by root cause (not a specific record). Use when the user asks "what's erroring in {table}?", "show failed rows", or "is {action} failing?".
-allowed-tools: Bash(clay *), Bash(jq *), Read
+allowed-tools: Read
 ---
 
 # Error sweep

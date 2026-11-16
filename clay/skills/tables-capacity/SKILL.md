@@ -1,7 +1,7 @@
 ---
 name: tables-capacity
 description: Clay tables — check the row-capacity ceiling when imports stall, before assuming a run/config/enrichment problem. Use when the user asks "why aren't new rows being added?", "why is the import stuck?", or "is this table full?".
-allowed-tools: Bash(clay *), Bash(jq *), Read
+allowed-tools: Read
 ---
 
 # Capacity check

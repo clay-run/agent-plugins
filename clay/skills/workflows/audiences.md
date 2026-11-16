@@ -14,6 +14,9 @@ they do not write field values onto records. Any workflow step that populates
 people or companies uses the action below. For access instructions, read the
 `clay` entry skill.
 
+For read-only Data hub enrichment parity checks or assignment discovery, read [enrichments.md](./enrichments.md) first. Use existing workflow inspection commands;
+do not add writeback, publish, or run anything merely to inspect it.
+
 ## Decide whether to write back
 
 Inspect the whole workflow and prior user instructions before adding an

@@ -68,6 +68,4 @@ counts. For the full version history, including versions that never ran, use
 
 Numbers first: lead with the count, rate, or quoted error the data shows, then
 the interpretation. Name the node and the affected run count for every
-node-specific finding. When the host exposes canvas annotation tools
-(`setAnalysisView`, `annotateWorkflow`, `clearAnnotations`), report node
-findings through them and keep the chat message to a short summary.
+node-specific finding.

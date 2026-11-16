@@ -1,7 +1,7 @@
 ---
 name: workflows-snapshots
 description: 'Clay workflows — version history: view snapshots, see what changed, and restore or undo a previous state. Use when the user mentions snapshots or asks to undo an edit.'
-allowed-tools: Bash(clay *), Bash(jq *), Read
+allowed-tools: Read
 ---
 
 # Workflow snapshots & version history

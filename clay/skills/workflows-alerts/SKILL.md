@@ -1,7 +1,7 @@
 ---
 name: workflows-alerts
 description: Clay workflow alerts — use when the user wants to create, inspect, edit, enable, disable, or delete a workflow alert rule, or subscribe themselves to its email notifications.
-allowed-tools: Bash(clay *), Bash(jq *), Read
+allowed-tools: Read
 ---
 
 # Workflow alerts

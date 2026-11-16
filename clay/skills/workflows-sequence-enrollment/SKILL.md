@@ -62,8 +62,9 @@ Two outcomes are blocking, not retryable — report them to the user rather than
 
 - `Couldn't load campaigns. Try again.` — the lookup itself failed.
 - `No live campaigns take their leads from a workflow. Launch one to enroll.` — the workspace has
-  no eligible sequence, and this step cannot be configured at all until it does. Launching is not
-  something any skill can do; the user has to do it in the Sequencer UI.
+  no eligible sequence, and this step cannot be configured at all until it does. If the user asks
+  to launch one and `clay sequences --help` lists `launch`, follow the status workflow in the
+  `sequences` skill; otherwise they launch it in the Sequencer UI.
 
 ## `entityId` is an Audiences record id
 

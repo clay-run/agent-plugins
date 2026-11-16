@@ -1,6 +1,6 @@
 ---
 name: ad-syncs
-description: Clay ad syncs — push an audience segment to ad platforms (LinkedIn, Meta, Google, Bing, Reddit, Vibe) as a custom audience. Use to create, edit, pause, or map the fields of an ad sync, or to check its status, match rate, or run history.
+description: Clay ad syncs — push an audience segment to ad platforms (LinkedIn, Meta, Google, Bing, Reddit, Vibe) as a custom audience. Use to create, edit, start, pause, or map the fields of an ad sync, or to check its status, match rate, or run history.
 ---
 
 # Ad syncs
@@ -25,9 +25,12 @@ platform matches the records and builds an audience to advertise to.
 - `clay ad-syncs destinations delete <adSyncId> --destination-id <destinationId>`
 - `clay ad-syncs field-mapping update <adSyncId> --input '<json>'`
 - `clay ad-syncs pause <adSyncId>`
+- `clay ad-syncs trigger <adSyncId>`
 - `clay ad-syncs runs list <adSyncId> [--limit <n>]`
 
-Run `clay ad-syncs <subcommand> --help` before a subcommand's first use. It has the exact output
+Use only the subcommands `clay ad-syncs --help` lists; some ship to only some channels. When one is
+missing, the user does that step in the Clay app, from the sync's `url`. Run
+`clay ad-syncs <subcommand> --help` before a subcommand's first use. It has the exact output
 shape, value sets, and error codes. `<provider>` is `LinkedIn`, `Meta`, `Google`, `Bing`, `Reddit`,
 or `Vibe`, written in lowercase inside `type=<provider>-ad-audience` (e.g.
 `type=linkedin-ad-audience`). An `<accountId>` is an `accountId` from `ad-accounts list`, and a
@@ -39,8 +42,8 @@ or `Vibe`, written in lowercase inside `type=<provider>-ad-audience` (e.g.
 - You cannot delete an ad sync: the user deletes it in the Clay app. A segment can have only one ad
   sync, so create one only for a segment the user confirmed.
 - Pause a running sync only when the user asks. Before running `pause`, tell them what pausing does
-  (see Statuses) and ask them to confirm, even when they asked for it. Never start or resume one:
-  the user does that in the Clay app, from the sync's `url`.
+  (see Statuses) and ask them to confirm, even when they asked for it.
+- Start or resume a sync with `trigger` only when the user explicitly asks; follow Start.
 
 ## Schedules
 
@@ -114,7 +117,32 @@ Confirm each choice with the user before running the command that makes it.
 
 5. **Field mapping.** Read `field-mapping.md` and follow it.
 
-Then give the user the sync's `url` so they can review it and start it in the Clay app.
+Then give the user the sync's `url` so they can review it. If they want to start it now, follow
+Start; otherwise they start it in the Clay app.
+
+## Start
+
+`trigger` starts a draft's first export, runs a one-time sync again, or resumes a paused sync.
+
+**Before confirming**, run `clay ad-syncs get <adSyncId>`. Tell the user:
+
+- each destination's platform and ad account;
+- what the schedule does: `ONE_TIME` exports once, `RECURRING` keeps syncing;
+- for a sync with a tier, that Enhanced Matching charges credits for each record it matches.
+
+**Always confirm with the question tool before running `trigger`.** You can't tell in advance
+whether a trigger will be held for approval, so an approval request, if one follows, is a second
+check, not a replacement. After the user confirms, run `get` again; if anything you described
+changed, tell the user and confirm again.
+
+**After the command:**
+
+- On `approval_required`, nothing has started yet: present the request as the `cli` skill describes
+  and don't run the command again.
+- On `validation_error`, report the reason in product terms (no destinations, a missing field
+  mapping, an empty segment, or an export already running) and offer to fix what you can.
+- On success, give the sync's `url` and say that `clay ad-syncs runs list <adSyncId>` shows each
+  destination's progress. Never retry automatically.
 
 ## Edit
 

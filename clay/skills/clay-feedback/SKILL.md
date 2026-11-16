@@ -1,7 +1,7 @@
 ---
 name: clay-feedback
 description: Clay feedback — send a bug report or product feedback to the Clay team via the `clay feedback` CLI.
-allowed-tools: Bash(clay *), AskUserQuestion
+allowed-tools: AskUserQuestion
 ---
 
 # Clay Feedback

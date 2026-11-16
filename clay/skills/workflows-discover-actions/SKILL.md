@@ -1,7 +1,7 @@
 ---
 name: workflows-discover-actions
 description: Clay workflows — discover available actions for workflow nodes (email lookup, company enrichment, phone finders, etc.) and inspect their input and output schemas. Use while building a workflow.
-allowed-tools: Bash(clay *), Bash(grep *), Bash(cat *), Bash(wc *), Bash(jq *), Read, Grep
+allowed-tools: Read, Grep
 ---
 
 # Discover enrichments with search
@@ -64,10 +64,18 @@ connection or an accessible provider connection ID, and
 Start with `sharedInputs: { inputMappingConfig: {}, inputRefs: {} }` and `validation: null`.
 Inspect the providers with `clay workflows actions schema <packageId> <actionKey>` to identify
 their required inputs and semantic types. Map shared inputs by semantic type, preserving upstream reference
-expressions and `inputRefs`; use provider parameter names for provider-specific overrides.
+expressions and `inputRefs`; each reference is `{ sourceNodeId, path }`, with `path`
+as a JSONPath such as `$.full_name`. Use provider parameter names for provider-specific overrides.
 Preserve the catalog's provider order and repeated entries. Use a unique node name based on
 the current graph. The insertion creates a native waterfall without executing providers. Unmapped inputs are allowed when information is missing, but do not
 run the workflow until the required inputs have been configured.
+
+For a custom waterfall specified by an attribute and an ordered provider list, use the
+same native insertion path. Omit `templateSelection` when no template was selected.
+Inspect each provider's schema, preserve the requested order, and bind shared inputs
+and provider overrides from upstream nodes. Configure one waterfall node rather than
+separate provider nodes or a newly published function. An explicit request for one
+provider alone should use that provider's action instead.
 
 To revise an existing native waterfall, read `clay workflows nodes get <workflowId> <nodeId>`
 (or the full graph) and modify `node.waterfallConfig`. Send the complete config using

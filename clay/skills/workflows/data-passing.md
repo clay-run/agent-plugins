@@ -425,7 +425,9 @@ Markdown for another AI step. The node's `recentOutputPaths` lists them before i
 
 A rep task node's outputs are under `result`: `$.result.taskId`, `$.result.status`,
 `$.result.created` (false when an earlier attempt of the same step already created the task),
-`$.result.assigneeUserId` and `$.result.dueAt` (only when the task has a due date). The node's
+`$.result.assigneeUserId` and `$.result.dueAt` (only when the task has a due date). A done call
+task also gives `$.result.notes` (what the rep logged) and `$.result.transcript` (what was said, one
+line per turn), each only when the call left one; wire them into the step that drafts a follow-up. The node's
 `recentOutputPaths` lists them before it has run.
 
 ## Discovering an action's dynamic fields

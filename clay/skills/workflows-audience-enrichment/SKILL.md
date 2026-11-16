@@ -1,7 +1,7 @@
 ---
 name: workflows-audience-enrichment
 description: Clay workflows — build enrichment steps and map their results back to Audiences in an existing audience enrichment workflow. Use while editing an audience enrichment workflow or migrating an Audience-backed bulk enrichment table into a workflow.
-allowed-tools: Bash(clay *), Bash(jq *), Read
+allowed-tools: Read
 ---
 
 # Build an audience enrichment workflow
@@ -16,6 +16,9 @@ and map enrichment results onto audience fields.
 Read the complete `workflows` and `audiences` skills first. Read `/workflows-discover-actions` when
 choosing provider actions, and read the `workflows` skill's `audiences.md` before mapping the
 writeback.
+
+For read-only configuration or assignment inspection, use the `workflows` skill's
+[enrichments.md](../workflows/enrichments.md) instead of following the construction steps below.
 
 ## Verify the workflow type
 

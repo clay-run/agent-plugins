@@ -1,7 +1,7 @@
 ---
 name: searches-advanced
 description: Use for advanced Clay people/company searches involving geography, industry, growth, employer history, audiences, relationships, counts or fields beyond the searches starter, and for query validation or quota errors.
-allowed-tools: Bash(clay *), Bash(jq *), Bash(grep *), Read, Grep
+allowed-tools: Read, Grep
 ---
 
 # Advanced Clay search
@@ -28,29 +28,37 @@ A search is a three-step, forward-only iterator:
 There is no cursor: the iterator's position lives server-side and can't be replayed, so
 each `run` call returns the records after the previous one.
 
-Before authoring a query, save the reference to a file in your working directory and read it
-from there — it is about 2,000 lines, far larger than one tool result can hold, so never
-print it to stdout or read it end to end:
+Before authoring a query, fetch only the reference sections the query needs, once per
+conversation. Start with `grammar`, `rules`, and the field catalog for your entity:
+
+```bash
+clay searches query-mode reference --sections grammar,rules,people-fields | jq -r '.reference'
+```
+
+| Section                 | Fetch when                                                                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `grammar`, `rules`      | Before you write the first query in a conversation: syntax, scopes, functions, and query policies. Skip them on later fetches.                                                             |
+| `people-fields`         | The search returns people.                                                                                                                                                                 |
+| `company-fields`        | The search returns companies, or a people search filters on employer attributes (`company.*` inside `experiences.any(...)`). It is the largest section, so skip it when you don't need it. |
+| `company-people-fields` | A companies search filters on its employees. It lists only what differs from `people-fields`; add `people-fields` too only if you need the shared fields and their allowed values.         |
+| `job-fields`            | The query filters on hiring.                                                                                                                                                               |
+| `examples`              | You want worked queries.                                                                                                                                                                   |
+| `workspace-resources`   | The query references audiences or tables.                                                                                                                                                  |
+
+Every field name and allowed enum value is in the field catalogs; a value that is not listed
+fails validation. Request the fewest sections that cover the query and make a second call if
+you find you need another. Sections come back in a fixed order, and an unknown name fails with `validation_error`.
+
+If you do need every section, omit `--sections`. It is too large for one tool result, so
+save it to a file and never print it to stdout:
 
 ```bash
 clay searches query-mode reference | jq -r '.reference' > ./clay-search-reference.md
 grep -n '^##' ./clay-search-reference.md
 ```
 
-The grep lists every section with its line number. Read these sections by line offset, once
-per conversation:
-
-1. **Grammar**, **Operators**, **Where Semantics**, and **Query mode policy**.
-2. **Common query guardrails** plus the **People** or **Companies query guardrails** for the
-   entity you are searching.
-3. Your entity's field catalog in full — **People fields** and **Experience fields** for people
-   searches, **Companies fields** for companies searches. Every field name and every allowed
-   enum value is there; a value that is not listed fails validation.
-
-Read a topic section (Location filtering, Dates/tenure/recency, Company identification,
-Products and services, Company size and revenue) only when the request needs it, and grep
-**Examples** for a field or phrase to see a worked query. Do not re-read sections already in
-your context. Queries return people or companies only; job-posting criteria are nested
+Do not re-read sections already in your context. If a query fails validation, fix it from the
+error message and the field catalog, then retry. Queries return people or companies only; job-posting criteria are nested
 filters on those (`jobs.exists(...)`, `company.jobs.any(...)`). Workspace audience
 references are covered in the Audiences section below.
 
@@ -75,7 +83,7 @@ When authoring a query here, resolve the audience yourself:
   segments match people queries; Account segments match companies queries. Follow each
   response's `cursor` with `--cursor` until it is absent before matching a name or
   checking for duplicates. Write the id into `@audience_segment("<segmentId>")`. The
-  reference's "Workspace resource references" section has the function signatures — e.g.
+  reference's "Workspace resource references" section (`--sections workspace-resources`) has the function signatures — e.g.
   `clay.exclude_people_identifiers(@audience_segment("SEGMENT_ID"))` to exclude a Contact
   audience, or `clay.filter_to_companies(@audience_segment("SEGMENT_ID"))` to target
   current employers from an Account audience.
@@ -113,7 +121,7 @@ they insist. Skip when the ask is already clearly bounded. After they insist, st
 ## Start a search
 
 ```bash
-clay searches query-mode reference | jq -r '.reference' > ./clay-search-reference.md
+clay searches query-mode reference --sections grammar,rules,people-fields | jq -r '.reference'
 clay searches query-mode create --query '<query>'
 ```
 

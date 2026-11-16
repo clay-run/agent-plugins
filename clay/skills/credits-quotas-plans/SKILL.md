@@ -1,6 +1,6 @@
 ---
 name: credits-quotas-plans
-description: Use when the user asks about credits, quotas, or plan limits, or verified usage requires a significant-spend warning or reveals a limit. Covers data-credit balance, action-execution balance, search result caps, period quotas, and upgrade paths before starting work that would only partially complete.
+description: Use when the user asks how to upgrade or change their Clay plan, where to manage billing, or about credits, quotas, or plan limits — including upgrade requests when credits remain. Provides the workspace’s direct plan-selector link and handles data-credit balances, action-execution balances, search caps, period quotas, and verified spending limits before paid work.
 ---
 
 # Credits, quotas, and plans
@@ -11,6 +11,13 @@ Follow the shared cost policy in `workflows-discover-actions/cost-and-budget.md`
 do not announce balances or suggest purchases just because a tool returned billing data.
 Stop and explain a verified shortfall rather than knowingly starting a partial run.
 An unknown cost does not establish a shortfall or require a cost-only approval.
+
+## Upgrade or change plan
+
+When the user asks how to upgrade, give their workspace’s plan-selector link below,
+even when credits remain. Do not require a shortfall or recommend waiting because of
+the remaining balance. Product documentation can supplement the answer, but must not
+replace the direct upgrade link with a docs link or general settings directions.
 
 ## Triage
 

@@ -17,7 +17,7 @@ topology. A truncated preview cannot establish that no other path exists. Never
 infer configuration or execution inputs from the display-only context.
 
 Supporting files in this directory: `publishing.md`, `testing.md`, `data-passing.md`,
-`presenting.md`, `audiences.md`, `account-agents.md`, `run-analysis.md`, `node-groups.md`,
+`presenting.md`, `audiences.md`, [enrichments.md](./enrichments.md), `account-agents.md`, `run-analysis.md`, `node-groups.md`,
 `csv-triggers.md`, `table-primitives.md`, `table-waterfalls.md`, `industry-mapping.md`,
 `repeat-function-calls.md`.
 
@@ -39,6 +39,14 @@ subscribe to a workflow's alert emails, read and follow the `/workflows-alerts` 
 
 You are helping users build and edit Clay workflows.
 
+- **Keep the build in one workflow by default.** Treat sourcing, similarity discovery,
+  qualification, finding contacts, enrichment, and routing for the same requested build as
+  stages of one workflow. Extend the workflow the user has open or the one already built in
+  this conversation, including follow-up requests, unless the user asks for a separate workflow.
+  Do not create another workflow just to organize stages, isolate testing, or handle a list.
+  Use connected nodes, branches, Repeat, and canvas groups where available. If a capability
+  requires a separate workflow or workflow function, explain the constraint and get the user’s
+  agreement before creating it; do not silently split the build.
 - **Name new workflows first.** When the current workflow is blank and has a placeholder name,
   choose a concise, descriptive name from the user's initial request. Immediately before renaming,
   run `clay workflows get <workflowId>` and inspect its current `name`; only run
@@ -91,6 +99,12 @@ Common node types (not just agent/tool — pick the type that fits the step):
   one of 2–255 fixed categories, with branch-ready `$.result.categoryId`. Use it for fixed-category
   labels from supplied data and whenever the user asks for Jev (`jev-1.13.0`). There is no
   `classify` nodeType; follow the recipe in `clay workflows nodes insert --help`.
+  If the backend reports Classify isn’t enabled for the workspace, tell the user and use a Claygent
+  node with an output schema instead.
+  Default to OpenAI Decisions (`gpt-6-luna`). If the backend reports Jev is unavailable
+  for this workspace, tell the user and create the same Classify step with Luna instead.
+  Do not claim Jev is available or has been added until the backend accepts it. Follow
+  “Route Classify results” below to decide whether to add a Conditional child.
 - **Claygent (agent) nodes** (`nodeType: "agent"`) — LLM loops with prompts (reasoning,
   research, drafting, summarizing, open-ended classification). Read and follow the complete `/workflows-claygent`
   skill before creating, editing, or running one.
@@ -162,6 +176,30 @@ Wiring a node's inputs — `inputSchema` with `sourceNodeId`/`sourcePath`, and `
 on tool nodes — is covered in `data-passing.md`. Read it before wiring the first input, and
 before reading or editing a tool node whose action has dynamic fields (resolving them needs
 the node's current static inputs).
+
+### Route Classify results
+
+When adding a Classify step, decide how its selected category will be used downstream:
+
+- If the request gives different actions for the categories, or says to continue only for
+  matching categories, automatically add a rules Conditional as the Classify step’s immediate
+  child and connect the requested paths. For example, classify inbound signups as B2B or B2C,
+  then enrich only B2B leads. Do not ask again when the requested routing is clear.
+- If classification is part of qualification or routing but the category-specific next actions
+  are unclear, ask what should happen for each category before wiring those paths. Suggest a
+  Conditional child and the relevant choices; do not invent destinations or discard records.
+- If the user only wants labels for reporting, or all categories continue through the same
+  actions, keep the Classify output and omit the Conditional. Reuse an existing Conditional
+  child when editing a graph instead of adding a duplicate.
+
+For today’s category output, map `$.result.categoryId` and `$.result.usedUncertain` from the
+Classify step into the Conditional’s `inputSchema`. Compare configured category ids using rules
+mode, guarding category matches with `usedUncertain` false so low-confidence results cannot
+silently take a positive route. Do not run a second AI classification to route an already
+selected category. Connect each requested destination with its matching `ruleId` and follow
+the no-match fallback rules below. Use the requested policy for uncertain or unmatched results;
+ask when that destination is unclear. Read the saved nodes and edges back to verify the mappings
+and routes before reporting completion.
 
 ### Conditional nodes
 
@@ -422,7 +460,8 @@ Its inputs have fixed names. Declare the ones you use in `inputSchema`, wired wi
 
 A run creates one task per node visit, and a rerun creates another. Rep task nodes have no list mode.
 Outputs: `$.result.taskId`, `$.result.status`, `$.result.created`, `$.result.assigneeUserId` and
-`$.result.dueAt`. If creation is rejected because rep task nodes are not enabled, tell the user;
+`$.result.dueAt`; a done call task also gives `$.result.notes` and `$.result.transcript` when the
+call left them. If creation is rejected because rep task nodes are not enabled, tell the user;
 there is no substitute.
 
 ### Triggers, audiences, and draft vs live
@@ -554,13 +593,42 @@ for the user before changing them.
   upload, or audience segment — and starts one run per record; the trigger must be live, which
   for Find leads and segment triggers means publishing the workflow first (a CSV trigger is live
   from creation). `runs get`, `runs steps`, `runs list`, `runs pause`, `runs resume` inspect and control
-  runs, and `clay workflows publish <workflowId>` ships the draft. Flags, the `--wait` poll, and
-  which runs exercise draft vs live are in `testing.md` and `publishing.md`.
+  runs, `runs bulk pause|resume|stop` changes many runs in one request, and
+  `clay workflows publish <workflowId>` ships the draft. Flags, the `--wait` poll, and which runs
+  exercise draft vs live are in `testing.md` and `publishing.md`.
 - `clay workflows runs rerun <workflowId> <runId...>` recovers failed runs: each one restarts at
   the node it failed on and continues through the rest of the workflow, on the published version.
   It spends credits, so run it with `--dry-run` first and confirm `rerunCount` and
   `estimatedCredits` with the user. The estimate is approximate; see `testing.md` for when it
   runs low. See "Recovering failed runs" in `testing.md`.
+
+#### Which runs a pause or resume request means
+
+One start often creates several runs, one per record: a Run click with several input people, a
+test-data run, a CSV upload. When the user says "pause", "pause this", or "pause the run" about a
+batch they just started or are looking at, pause every run in that batch that is still going.
+Don't ask whether they mean one run or all of them when the context already names the batch.
+
+- Select only that batch: `--batch-id <id>` when its runs share a batch (`batch.id` on the runs
+  that `runs test` and `runs list` return), or the run ids the start returned, each as `--run-id`.
+  Don't widen the selection to other runs of the workflow, for example with `--status running`
+  alone.
+- Change more than one run with `clay workflows runs bulk pause|resume`, never with `runs pause`
+  or `runs resume` in a loop. "Pausing, resuming, or stopping many runs" in `testing.md` covers
+  the flags, the dry run, and approval.
+- The exception is a batch started seconds ago: the bulk commands can't see runs that new yet.
+  Pause each of its run ids with `runs pause`, which sees new runs at once and needs no approval.
+- If `clay workflows runs --help` doesn't list `bulk`, the installed CLI predates it. Pause or
+  resume each run with `runs pause` or `runs resume`, or ask the user to select the runs on the
+  workflow's Runs page and use Pause, Resume, or Stop there.
+- For "resume those runs", resume the same runs that were paused: reuse the batch id or run ids
+  from the pause, not a new filter.
+- When the user asks for one run ("pause just this one", a single run id), pause only that run.
+  Ask which runs they mean only when the context leaves the batch or the run unclear.
+- Pausing runs is not pausing their trigger. A trigger pause stops the automation from starting
+  new runs and pauses the trigger's runs that are in flight, but it skips test runs, so it does
+  not pause a batch the user started from the editor. Pause the trigger only when the user asks
+  to stop the automation (see `publishing.md`).
 
 ### Running a workflow as a routine
 
@@ -602,16 +670,12 @@ Then run it with `clay routines runs start` (see `routines`).
   or schema failure — require `.isError != true and .outputSchemaValidated == true` for a schema
   test.
 
-Both are single-shot previews. External CLI users have per-user daily caps (defaults ~25 action
-tests and ~10 code tests, overridable per workspace). Clay's hosted agents are exempt.
-Use them to confirm an input/output shape,
-never to enrich or process a batch of records: for that use a managed routine
-(`clay routines runs start`), a table column, or a workflow node, none of which are subject to
-those caps.
+Both are single-shot previews. Use them to confirm an input/output shape, never to enrich or
+process a batch of records: for that use a managed routine (`clay routines runs start`), a table
+column, or a workflow node. Action previews spend credits like any other action run.
 
-`rate_limited` (HTTP 429, exit 4) includes daily caps and temporary throttling. If the message
-says the daily allowance is exhausted, stop testing; do not sleep or retry in this session.
-`details.retryAfter` gives the delay in seconds.
+`rate_limited` (HTTP 429, exit 4) means temporary throttling. `details.retryAfter` gives the
+delay in seconds.
 
 ### Workflow run allowance
 
@@ -626,8 +690,8 @@ than retrying or treating it as invalid workflow input. The CLI may label this r
   cancelled runs do not count. Do not calculate remaining allowance from the visible run
   history, which may be filtered or limited by the plan's history window.
 - Tests that create workflow runs consume this allowance too. Standalone action/code
-  previews have the separate daily caps described above. Credits and API rate limits are
-  separate from the workflow run allowance.
+  previews do not count toward it. Credits and API rate limits are separate from the workflow
+  run allowance.
 - Explain that upgrading allows more runs; do not suggest copying a workflow or deleting
   runs to bypass the limit. After a confirmed upgrade, allow up to about a minute for the
   plan to refresh instead of asking the user to upgrade again. If it still blocks after
@@ -662,6 +726,12 @@ index keys, so declare `"payload": { "type": "array", "items": { … } }` in `in
 `$.payload[0].email` (or iterate it in a list-mode node with `listEntriesRef` `$.payload`). Senders
 like HubSpot post arrays of events, so check the sender's shape before writing the schema. When you
 control the sender, post an object.
+
+**Webhook retries:** when the sender can set headers, have it send `X-Clay-Webhook-Idempotency-Key`
+(1 to 250 visible ASCII characters) with a stable id for the event, such as an order or event id, and
+reuse it on every retry. A POST whose key the trigger has already received starts no new run, even
+if its body differs. Only `webhookUrl`s under `/sources/webhook/` honor the header; older
+`/tc-workflows/streams/…/webhook` URLs ignore it. An invalid key returns 400.
 
 **Audience multi-segment sharing:** multiple `audience_segment` triggers (different `segmentId`s)
 may share one trigger node when they have the **same trigger type** and the **same outgoing edge**.

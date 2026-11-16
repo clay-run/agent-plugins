@@ -41,8 +41,10 @@ both.
 
 ## Several steps per item
 
-When each item needs more than one step (enrich, then score, then draft), first try one workflow
-function that does those steps for a single item, called with Repeat. Set `listMode` and
+Keep per-item steps in the current workflow by default, using one Repeat node per step.
+Do not extract a workflow function merely to organize a multi-step build. When the user asks
+for a reusable function or agrees to extraction after you explain the execution tradeoffs below,
+use one workflow function that does those steps for a single item, called with Repeat. Set `listMode` and
 `listEntriesRef` when you create the call, so a rejection comes before any other wiring. If it is
 rejected, delete the call if it was created and chain one Repeat node per step instead.
 

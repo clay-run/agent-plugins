@@ -25,6 +25,8 @@ Never fill the gap by guessing.
 - **Live workspace state** — credit balances, quotas, plan limits in effect for this
   workspace: use `credits-quotas-plans`. This skill covers what plans and pricing _are_
   publicly, not what this workspace has.
+- **Upgrading or changing a plan** — use `credits-quotas-plans` for the workspace’s
+  direct plan-selector link, including when the user still has credits.
 - **API and CLI reference** — endpoints, schemas, flags: the `public-api` and `cli`
   skills point at <https://developers.clay.com/llms.txt>.
 - **Something looks broken** — use `clay-feedback`.
