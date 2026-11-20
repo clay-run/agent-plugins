@@ -169,16 +169,15 @@ will not help. Read the error message and choose one of:
 2. **Per-search, period, or credits** — anything else. Stop spending allowance: no further
    `run` at any `--limit` (including 1), and no new `create` to work around a per-search
    cap. The report is the finished deliverable. Give the short cap account from the error
-   (upgrade, named period reset, or contact support). Always include the plan selector —
-   resolve `<workspaceId>` with `clay whoami | jq -r '.workspace.id'` when the error has no
-   URL: `https://app.clay.com/workspaces/<workspaceId>/billing/plan-selector` (bare URL;
-   prefer a plan-selector URL from the error when present). If the error includes an upgrade
-   URL or upgrade copy, make that selector extremely prominent: near the top of the reply
-   and again as the last line (`Upgrade your plan now at: <url>`). If the error says to
-   contact support, lead with that path and still add one plan-selector line so they can
-   self-serve if they prefer. Also share the public search docs for follow-up questions:
+   (upgrade, named period reset, or contact support). If the error’s `message` includes an
+   upgrade URL, make it extremely prominent: near the top of the reply and again as the last
+   line (`Upgrade your plan now at: <url>`). Keep the URL intact, including its attribution.
+   If the error says to contact support or an account admin, lead with that path and still
+   add the upgrade line when the error supplies a link, so they can self-serve if they
+   prefer. If no link is supplied, relay the error’s guidance without constructing a billing
+   URL. Also share the public search docs for follow-up questions:
    `https://developers.clay.com/searches#result-limits`. If the user asks to upgrade their
-   plan, open the plan selector link for them. Pull a remainder only if they ask for it in a
+   plan and the error supplies a link, open that link for them. Pull a remainder only if they ask for it in a
    later message after that report; the original request for N results is not that ask.
 
 `validation_error` (exit 2) means malformed input (bad flags/filters/query), not a quota.

@@ -413,6 +413,19 @@ not-found. `3` on an audiences command usually means Audiences is not enabled fo
 the workspace — that is a workspace-config answer for the user, not something to
 retry.
 
+When a `clay audiences` query returns `plan_upgrade_required`, explain the plan
+restriction. If the error’s `message` includes an upgrade URL, make it extremely
+prominent: near the top of the reply and again as the last line (`Upgrade your
+plan now at: <url>`). Keep the URL intact, including its attribution. If the
+error says to contact support or an account admin, lead with that path and still
+add the upgrade line when the error supplies a link, so they can self-serve if
+they prefer. If no link is supplied, relay the error’s guidance without
+constructing a billing URL. Do not retry, recommend signing in again, or suggest
+buying credits to unlock querying.
+An `auth_forbidden` error saying Audiences is not enabled for the workspace is
+different: a workspace admin must turn Audiences on, so do not present it as
+requiring a paid upgrade.
+
 `4` (`rate_limited`) means the workspace reached an Audiences rate limit.
 Most Audiences requests share a workspace budget. `records get` has a separate
 100,000-record allowance per workspace that replenishes at 100,000 records/hour,

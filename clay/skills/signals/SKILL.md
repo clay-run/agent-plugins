@@ -553,6 +553,18 @@ users in practice:
 JSON on stdout, a typed error envelope on stderr. Exit codes: `0` ok, `2`
 validation, `3` auth, `4` rate-limit, `5` network, `6` not-found.
 
+`plan_upgrade_required` for an audience-based signal, or `quota_exceeded` saying
+the plan doesn’t include Signals for a table-based one, is a plan restriction
+from a `clay signals` command. Explain it, and if the error’s `message` includes
+an upgrade URL, make it extremely prominent: near the top of the reply and again
+as the last line (`Upgrade your plan now at: <url>`). Keep the URL intact,
+including its attribution. If the error says to contact support or an account
+admin, lead with that path and still add the upgrade line when the error supplies
+a link, so they can self-serve if they prefer. If no link is supplied, relay the
+error’s guidance without constructing a billing URL. Do not retry, recommend signing in again, or suggest buying credits to unlock
+the feature. This is separate from a signal pausing after exhausting its credit
+limit or the workspace’s credits; follow the guidance above for those cases.
+
 - `3` usually means signals are not enabled for the workspace, or the credential
   cannot read them — a workspace-config answer for the user, not a retry.
 - `6` on `get` most often means a `sig_…` was passed where a `td_…` belongs.

@@ -58,8 +58,8 @@ Do not pass it to a function or action node, or expand it into separate provider
 Build `waterfallConfig` from the candidate's `attribute`,
 `templateSelection: { parentTemplateId, templateId }` (omit `parentTemplateId` for standalone templates),
 and ordered `providers`. Give every
-provider entry a unique `id` (including repeated providers), `authAccountId: null` for Clay's
-connection or an accessible provider connection ID, and
+provider entry a unique `id` (including repeated providers), `authAccountId: null` for the
+workspace's default connection or an accessible provider connection ID, and
 `inputOverrides: { inputMappingConfig: {}, inputRefs: {} }`.
 Start with `sharedInputs: { inputMappingConfig: {}, inputRefs: {} }` and `validation: null`.
 Inspect the providers with `clay workflows actions schema <packageId> <actionKey>` to identify
@@ -81,7 +81,10 @@ To revise an existing native waterfall, read `clay workflows nodes get <workflow
 (or the full graph) and modify `node.waterfallConfig`. Send the complete config using
 `clay workflows nodes update <workflowId> <nodeId> --input <json|file|->` with only the
 `waterfallConfig` field. Preserve the template selection, provider IDs and ordering, and any
-settings not being changed. Shared inputs use semantic types; provider input overrides use
+settings not being changed. A provider or validator added with `authAccountId: null` starts on
+the workspace's private default connection when it has one; steps already in the waterfall
+keep their account, where `null` means Clay's connection. To put a new step on Clay's
+connection, add it, then set its `authAccountId` to `null` in a second update. Shared inputs use semantic types; provider input overrides use
 provider parameter names. Never update the generated call bindings or hidden child nodes directly.
 
 1. Identify the inputs available at the insertion point from the conversation and

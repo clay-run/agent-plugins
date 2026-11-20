@@ -282,8 +282,20 @@ Use `sequences pause` when the user asks to pause an active sequence. It needs n
 
 - On success, report the sequence name, its new status, and the returned `url`. After a launch or resume, say that a `segment` sequence's lead enrollment (re-enrollment after a resume) and AI snippet evaluation continue in the background, or that a `workflow` sequence sends to leads as its workflow enrolls them.
 - On `approval_required`, nothing changed yet: present the request as the `cli` skill describes and don't run the command again.
+- On `plan_upgrade_required`, nothing changed: follow **Plan restrictions** below instead of the steps for other errors.
 - On any other error, run a fresh `get` first: the status change can be saved even when a later provider step fails. If the status changed, say so, report the error as a problem with sending setup, and send the user to the Sequencer UI to check; don't offer a retry. Otherwise, for `validation_error`, report each reason in product terms and offer to fix the ones you can, or the other command it names. For `conflict`, the sequence changed after the user confirmed: tell them its current status and what changed.
 - Never retry automatically.
+
+## Plan restrictions
+
+When a `clay sequences` command is blocked by the workspace’s plan
+(`plan_upgrade_required`), explain the restriction. If the error’s `message`
+includes an upgrade URL, make it extremely prominent: near the top of the reply
+and again as the last line (`Upgrade your plan now at: <url>`). Keep the URL
+intact so its attribution is preserved. If the error supplies no link, relay
+its guidance without constructing a billing URL. Do not retry the command,
+recommend signing in again, or suggest buying credits to unlock a plan-gated
+feature.
 
 ## Communication
 

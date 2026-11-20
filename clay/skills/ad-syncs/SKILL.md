@@ -10,6 +10,15 @@ Before using this skill, read the `clay` entry skill if you haven’t already th
 An ad sync pushes an audience segment to ad accounts on ad platforms, called its destinations. Each
 platform matches the records and builds an audience to advertise to.
 
+## Starting from a table
+
+If the user wants to sync ads from an existing Clay table, recommend uploading the rows to
+Audiences. Table-based ad syncs are deprecated and no longer supported. Tell the user this.
+
+Suggest the user use **Create or update Audiences record** in
+their table in the Clay app, if that action is available in their workspace. Use the `audiences` skill to
+find or create a segment for those records, then follow Create to sync it to the ad platform.
+
 ## Supported commands
 
 - `clay ad-syncs list [--limit <n>] [--cursor <cursor>]`
@@ -28,7 +37,7 @@ platform matches the records and builds an audience to advertise to.
 - `clay ad-syncs trigger <adSyncId>`
 - `clay ad-syncs runs list <adSyncId> [--limit <n>]`
 
-Use only the subcommands `clay ad-syncs --help` lists; some ship to only some channels. When one is
+Use only the subcommands `clay ad-syncs --help` lists; older CLI versions lack some. When one is
 missing, the user does that step in the Clay app, from the sync's `url`. Run
 `clay ad-syncs <subcommand> --help` before a subcommand's first use. It has the exact output
 shape, value sets, and error codes. `<provider>` is `LinkedIn`, `Meta`, `Google`, `Bing`, `Reddit`,
@@ -36,9 +45,20 @@ or `Vibe`, written in lowercase inside `type=<provider>-ad-audience` (e.g.
 `type=linkedin-ad-audience`). An `<accountId>` is an `accountId` from `ad-accounts list`, and a
 `<destinationId>` is a `providerSyncConfigs[].id` from `get`.
 
+## Plan restrictions
+
+When a `clay ad-syncs` command is blocked by the workspace’s plan
+(`plan_upgrade_required`), explain the restriction. If the error’s `message`
+includes an upgrade URL, make it extremely prominent: near the top of the reply
+and again as the last line (`Upgrade your plan now at: <url>`). Keep the URL
+intact so its attribution is preserved. If the error supplies no link, relay
+its guidance without constructing a billing URL. Do not retry the command,
+recommend signing in again, or suggest buying credits to unlock a plan-gated
+feature.
+
 ## Limits
 
-- You can always create an ad sync, and edit it while it is a draft or paused.
+- When ad syncs are enabled for the workspace, you can create one and edit it while it is a draft or paused.
 - You cannot delete an ad sync: the user deletes it in the Clay app. A segment can have only one ad
   sync, so create one only for a segment the user confirmed.
 - Pause a running sync only when the user asks. Before running `pause`, tell them what pausing does
@@ -68,7 +88,7 @@ Tell the user the label in parentheses, not the raw value.
 - `BULK_ENRICHMENT_FAILED` (Enrichment failed): the enrichment step failed.
 - `PAUSED` (Paused): the user paused it. Clay stops enriching new records in the segment, so it
   stops spending credits, and stops pushing new records to the ad platforms. The audiences already
-  on the platforms stay as they are until the user resumes the sync in the Clay app.
+  on the platforms stay as they are until the sync is resumed (see Start).
 
 ## Create
 
@@ -164,7 +184,7 @@ can't be edited.
 - Remove a destination, on drafts only: `clay ad-syncs destinations delete <adSyncId> --destination-id <destinationId>`
 - Change the field mapping: follow `field-mapping.md`.
 
-A paused sync stays paused. The edit takes effect once the user resumes it in the Clay app.
+A paused sync stays paused. The edit takes effect once it is resumed (see Start).
 
 ## Read
 

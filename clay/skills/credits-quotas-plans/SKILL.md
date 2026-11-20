@@ -24,6 +24,7 @@ replace the direct upgrade link with a docs link or general settings directions.
 After checking what remains (below), route by what is short:
 
 - **`balance` short** — CLI top-up or billing UI (`addCredits`). Prefer auto top-up.
+  Free and trial plans can’t buy credits; see **CLI top-up** for the upgrade link.
 - **`actionExecutionBalance` short** (when the field is present) — plan selector only.
   There is no top-up for action executions. Do not offer `once`, `auto`, or
   `addCredits`.
@@ -31,11 +32,14 @@ After checking what remains (below), route by what is short:
   user's personal monthly credit limit. A top-up does not raise it; a workspace admin
   does, from the MCP page in Clay. It applies only to runs billed to the user, so
   mention it as a possible blocker rather than refusing the run on it alone.
-- **Search `quota_exceeded` or period cap exhausted** — plan selector and/or wait for
-  the named reset in the error message. Defer shrink/retry rules to the `search`
-  skill; do not invent a top-up path for result caps.
+- **Search `quota_exceeded` or period cap exhausted** — use the upgrade link in the
+  error’s `message` when it has one; otherwise relay its support, account-admin or
+  reset guidance (see **Search and result-cap quotas** below). Do not substitute the
+  generic plan selector. Defer shrink/retry rules to the `searches` skill; do not
+  invent a top-up path for result caps.
 
-Plan selector URL (upgrade or change plan):
+Plan selector URL, for when the user asks to upgrade or change plan, or `actionExecutionBalance`
+is short. Not for errors: use the link an error supplies, or none.
 
 ```bash
 clay whoami | jq -r '.workspace.id'
@@ -76,6 +80,12 @@ user pushes back against auto, or if auto is unavailable.
 Read `clay credits top-up <subcommand> --help` for the exact JSON output shape,
 flags, and examples; that help is the contract.
 
+If `clay credits top-up once` fails with `validation_error` (exit 2) saying the plan
+can’t buy credits (free and trial plans), don’t retry. If the error’s `message`
+includes an upgrade URL, make it extremely prominent: near the top of the reply and
+again as the last line (`Upgrade your plan now at: <url>`), keeping the URL intact.
+Otherwise relay the error without constructing a billing URL.
+
 ```bash
 clay credits top-up auto get
 clay credits top-up auto enable --threshold <n> --credits <n> [--daily-spend-limit-cents <n|none>]
@@ -109,6 +119,8 @@ do not treat command exit as a topped-up balance.
 - `auth_forbidden` (exit 3) — billing-management access required
 - `not_found` (exit 6) — auto top-up unavailable for this workspace, or disable
   when not currently enabled; fall back to `once` or the billing UI
+- `validation_error` (exit 2) saying the plan can’t purchase credits — free and trial
+  plans; follow the upgrade-link guidance above instead of the billing UI
 
 **Do not run top-up without explicit user confirmation.** `credits top-up`
 commands are gated from auto-approval in the plugin — present options and wait
@@ -134,16 +146,15 @@ replenishes **credit** shortfalls — it does not raise per-search or per-period
 result limits.
 
 `quota_exceeded` (exit 1, HTTP 402) is a plan result cap or credit/usage limit —
-not a transient failure (do not retry with backoff). Prefer the plan selector over top-up unless the
-message is clearly a data-credit shortfall that top-up can fix. When the error
+not a transient failure (do not retry with backoff). Prefer the error’s upgrade link over
+top-up unless the message is clearly a data-credit shortfall that top-up can fix. When the error
 is about results already requested vs a cap, or a named period reset, stop
 paging; for shrink/retry rules follow the `searches` skill's Quotas section — do
 not invent a top-up path for result caps.
 
-Plan selector:
-
-```bash
-clay whoami | jq -r '.workspace.id'
-```
-
-`https://app.clay.com/workspaces/<workspaceId>/billing/plan-selector`
+For a search quota error, take the upgrade URL from the error’s `message` and make it
+extremely prominent: near the top of the reply and again as the last line (`Upgrade
+your plan now at: <url>`). Preserve its full URL, including attribution. If the error
+says to contact support or an account admin, lead with that path and still add the
+upgrade line when the error supplies a link. If no upgrade link is supplied, relay the
+error’s support, account-admin or reset guidance without constructing a billing URL.

@@ -24,7 +24,7 @@ because it changes how `EMAIL` is mapped.
 5. Run `clay ad-syncs field-mapping update <adSyncId> --input '<json>'`. It replaces the whole
    mapping. Compare the output with what you sent, because ineligible keys are dropped silently.
 
-On a paused sync, the new mapping takes effect once the user resumes it in the Clay app.
+On a paused sync, the new mapping takes effect once it is resumed (see Start in `SKILL.md`).
 
 ## Defaults
 

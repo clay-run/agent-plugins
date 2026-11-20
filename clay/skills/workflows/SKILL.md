@@ -97,26 +97,25 @@ Common node types (not just agent/tool — pick the type that fits the step):
 
 - **Classify steps** — a Use AI tool node with `useCase` `decision` that sorts each record into
   one of 2–255 fixed categories, with branch-ready `$.result.categoryId`. Use it for fixed-category
-  labels from supplied data and whenever the user asks for Jev (`jev-1.13.0`). There is no
-  `classify` nodeType; follow the recipe in `clay workflows nodes insert --help`.
+  labels from supplied data, and whenever the user asks for Jev or a decisions API: Classify does
+  the same job, so build one. There is no `classify` nodeType; follow the recipe in
+  `clay workflows nodes insert --help`. Clay picks the model: don’t set one, and don’t say which
+  model or provider Classify uses.
   If the backend reports Classify isn’t enabled for the workspace, tell the user and use a Claygent
-  node with an output schema instead.
-  Default to OpenAI Decisions (`gpt-6-luna`). If the backend reports Jev is unavailable
-  for this workspace, tell the user and create the same Classify step with Luna instead.
-  Do not claim Jev is available or has been added until the backend accepts it. Follow
-  “Route Classify results” below to decide whether to add a Conditional child.
+  node with an output schema instead. Follow “Route Classify results” below to decide whether to
+  add a Conditional child.
 - **Claygent (agent) nodes** (`nodeType: "agent"`) — LLM loops with prompts (reasoning,
   research, drafting, summarizing, open-ended classification). Read and follow the complete `/workflows-claygent`
   skill before creating, editing, or running one.
   - **Create:** send `agentName` and `agentPrompt` **together in the same** `--input` —
     separate calls can persist a blank prompt. Omit `agentModel` to use the workspace default
     (Auto where enabled), or set it to the specific model the user requests. One exception: a node
-    you are about to make an account agent is created bare — see account agents below.
+    you are about to make a Claygent with account context is created bare — see Claygents with account context below.
   - **Reuse:** `clay claygents list --search <text>` returns regular Claygents (`agentType: null`)
-    and account agents (`agentType: "account"`). Read regular Claygents with `clay claygents get <id>`.
+    and Claygents with account context (`agentType: "account"`). Read regular Claygents with `clay claygents get <id>`.
     Send only `agentClaygentId` (the returned `id`) to attach either kind, then inspect the linked
     agent with `clay workflows nodes get <workflowId> <nodeId>`. Do not send `agentName` / prompt / model — `agentName` can rewrite that
-    shared prompt. For account agents, follow `account-agents.md` for selection and input wiring.
+    shared prompt. For Claygents with account context, follow `account-agents.md` for selection and input wiring.
 - **Tool nodes** (`nodeType: "tool"`) — run a single Clay action or Clay function. (UI may
   label these "Enrich" or "Function".) `tools` may be omitted while drawing an outline; before
   validate/test/publish, set exactly one `tools` entry — either
@@ -553,22 +552,22 @@ don't guess at flags.
   failed runs — see "Recovering failed runs" in `testing.md` for that. Returns immediately (does
   not poll); inspect with `clay workflows runs get`. Pass `--source-run`, `--inputs`, or both;
   with both, `--inputs` replaces the matching inputs recorded in the source run.
-- Account agents (agent nodes backed by a platform-managed Claygent with account context):
+- Claygent nodes with account context:
   `clay workflows nodes create-account-agent <workflowId> <nodeId> [--name <name>]` links a new
   one, from the platform template, to an agent node that has no linked agent — create the node
   bare (name and edges, no agent fields), run this with a specific `--name`, then set the prompt
   and tasks on the linked node. `clay workflows nodes upgrade-to-account-agent` converts a node
   already backed by a regular Claygent, and is one-way. Under an audiences trigger, default to an
-  account agent for work that benefits from account context (research, enrichment, scoring,
+  Claygent with account context for work that benefits from account context (research, enrichment, scoring,
   qualification, personalized outreach), and keep a regular Claygent for pure synthesis of
-  upstream output. Account agents created from a workflow cannot search the web, so give
-  public web research to a regular Claygent, downstream of the account agent when the step
-  also needs account context (see `account-agents.md`). Include a downstream write-to-audiences node for account-agent results,
+  upstream output. Claygents with account context created from a workflow cannot search the web, so give
+  public web research to a regular Claygent, downstream of the Claygent with account context when the step
+  also needs account context (see `account-agents.md`). Include a downstream write-to-audiences node for Claygent with account context results,
   reusing an existing node when possible; follow `audiences.md` for mappings and explicit
   destination or no-save instructions.
-- **Read `account-agents.md` in full before any account-agent work** (linking, upgrading,
+- **Read `account-agents.md` in full before any Claygent with account context work** (linking, upgrading,
   swapping, editing prompt/tasks, or changing `accountId` wiring). Preconditions, `accountId`
-  wiring, the ambiguous `auth_forbidden`, timeout-retry semantics, and what an account agent
+  wiring, the ambiguous `auth_forbidden`, timeout-retry semantics, and what a Claygent with account context
   already sees live there; `--help` carries exit codes and examples.
 
 ### Canvas node groups
@@ -680,8 +679,8 @@ delay in seconds.
 ### Workflow run allowance
 
 When the server reports that a workflow has reached its run limit, explain the limit rather
-than retrying or treating it as invalid workflow input. The CLI may label this response
-`validation_error`; use the message to distinguish it from other validation failures.
+than retrying or treating it as invalid workflow input. The CLI reports it as
+`quota_exceeded`; use the message to tell it apart from other quota errors.
 
 - Where enabled, Free/Trial workspaces have a lifetime allowance of 100 runs per workflow,
   not per workspace or per month. Paid plans do not have this cap. Use the server response
@@ -693,9 +692,13 @@ than retrying or treating it as invalid workflow input. The CLI may label this r
   previews do not count toward it. Credits and API rate limits are separate from the workflow
   run allowance.
 - Explain that upgrading allows more runs; do not suggest copying a workflow or deleting
-  runs to bypass the limit. After a confirmed upgrade, allow up to about a minute for the
-  plan to refresh instead of asking the user to upgrade again. If it still blocks after
-  that, report the issue rather than repeatedly retrying.
+  runs to bypass the limit. If the error’s `message` includes an upgrade URL, show it once,
+  as the last line of the reply (`Upgrade your plan now at: <url>`). Keep the URL intact so
+  its attribution is preserved, and do not construct a billing URL when the error supplies
+  none. After a
+  confirmed upgrade, allow up to about a minute for the plan to refresh instead of asking
+  the user to upgrade again. If it still blocks after that, report the issue rather than
+  repeatedly retrying.
 
 ### Triggers
 
@@ -811,7 +814,7 @@ workflow function call or native waterfall, and whenever each item needs more th
 covers mapping the current item, the two-update waterfall flow, and when to use one repeating
 function call instead of a chain of Repeat nodes.
 
-Unsupported on account agent nodes and on trigger/conditional/map/reduce/collect/fork/join.
+Unsupported on Claygent nodes with account context and on trigger/conditional/map/reduce/collect/fork/join.
 If the workspace has list mode disabled, the update rejects — relay that rather than retrying.
 
 ### Wiring the first node after creating a trigger
@@ -879,7 +882,6 @@ their own CLI commands elsewhere rather than a `clay workflows` subcommand:
   `clay tables list`, `clay functions list`, and
   `clay audiences list --entity-type people|companies` for audience segments.
 
-The raw CPJ Search DSL has no CLI command; `clay searches query-mode`
-covers Clay search itself (see the `searches` skill). When a capability isn't listed here and has no
-`clay` command, it's genuinely unavailable rather than hidden — tell the user that instead of
+When a capability isn't listed here and has no `clay` command, it's genuinely unavailable
+rather than hidden — tell the user that instead of
 hunting for a command that will not appear.

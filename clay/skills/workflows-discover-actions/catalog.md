@@ -14,10 +14,10 @@ reasoning, research, drafting, or summarization, use the
 capability.
 
 The catalog also hides Use AI, which backs the Classify step. When a step sorts each record into
-one of a fixed set of categories, or the user asks for Jev, insert a Classify step as described in
-`clay workflows nodes insert --help` instead of a Claygent. Jev (`jev-1.13.0`) is a Classify
-model only; never set it as a Claygent's `agentModel`. If the backend reports Jev is unavailable
-for this workspace, tell the user and use OpenAI Decisions (`gpt-6-luna`) for the same step instead.
+one of a fixed set of categories, or the user asks for Jev or a decisions API, insert a Classify step
+as described in `clay workflows nodes insert --help` instead of a Claygent; it does the same job.
+Clay picks the Classify model: don’t set one, don’t say which model or provider it uses, and never set
+Jev as a Claygent’s `agentModel`.
 
 ## Actions catalog
 

@@ -12,10 +12,9 @@ or function, so its absence from `clay workflows actions list` does not make Cla
 unavailable. Use `/workflows-discover-actions` only for tool nodes.
 
 To sort each record into one of a fixed set of categories from data the workflow already has, or
-when the user asks for Jev, use a Classify step instead: a Use AI tool node whose inputs are listed
-in `clay workflows nodes insert --help`. Jev is a Classify model, not a Claygent model.
-If the backend reports Jev is unavailable for this workspace, tell the user and use
-OpenAI Decisions (`gpt-6-luna`) for the same Classify step instead.
+when the user asks for Jev or a decisions API, use a Classify step instead: a Use AI tool node whose
+inputs are listed in `clay workflows nodes insert --help`. Classify does the same job; Clay picks its
+model, so don’t set one or say which model or provider it uses. Never set Jev as a Claygent’s model.
 For downstream category-based actions, follow “Route Classify results” in `/workflows`: add
 a rules Conditional child when the requested paths are clear, or ask about unclear next actions.
 
